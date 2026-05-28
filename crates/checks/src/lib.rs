@@ -34,6 +34,7 @@ pub mod deploy_arg_auth;
 pub mod dynamic_symbol_key;
 pub mod env_in_struct;
 pub mod event_duplicate;
+pub mod expect_leaks;
 pub mod event_no_topics;
 pub mod event_topic_runtime_string;
 pub mod extend_ttl_in_loop;
@@ -154,6 +155,7 @@ pub use deploy_arg_auth::DeployArgAuthCheck;
 pub use dynamic_symbol_key::DynamicSymbolKeyCheck;
 pub use env_in_struct::EnvInStructCheck;
 pub use event_duplicate::EventDuplicateCheck;
+pub use expect_leaks::ExpectLeaksCheck;
 pub use event_no_topics::EventNoTopicsCheck;
 pub use event_topic_runtime_string::EventTopicRuntimeStringCheck;
 pub use extend_ttl_in_loop::ExtendTtlInLoopCheck;
@@ -351,5 +353,6 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(AdminNoGroupAuthCheck),
         Box::new(OwnershipPendingNotClearedCheck),
         Box::new(OwnershipNoApprovalInvalidationCheck),
+        Box::new(ExpectLeaksCheck),
     ]
 }
