@@ -337,6 +337,7 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(MapUserKeyBloatCheck),
         Box::new(TimestampTruncationCheck),
         Box::new(UnlimitedAllowanceCheck),
+        Box::new(AllowanceClearCheck),
         Box::new(LockPeriodTruncationCheck),
         Box::new(LinearWhitelistScanCheck),
         Box::new(UncappedSlippageCheck),
