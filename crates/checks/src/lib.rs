@@ -100,6 +100,7 @@ pub mod ttl_min_zero;
 pub mod unauth_address_in_struct;
 pub mod unauth_fee_setter;
 pub mod unauth_sensitive_read;
+pub mod storage_has_get_race;
 pub mod unbounded_batch;
 pub mod unbounded_input_storage;
 pub mod unbounded_storage;
@@ -220,6 +221,7 @@ pub use ttl_min_zero::TtlMinZeroCheck;
 pub use unauth_address_in_struct::UnauthAddressInStructCheck;
 pub use unauth_fee_setter::UnauthFeeSetterCheck;
 pub use unauth_sensitive_read::UnauthSensitiveReadCheck;
+pub use storage_has_get_race::StorageHasGetRaceCheck;
 pub use unbounded_batch::UnboundedBatchCheck;
 pub use unbounded_input_storage::UnboundedInputStorageCheck;
 pub use unbounded_storage::UnboundedStorageCheck;
@@ -347,6 +349,7 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(TokenSharedStorageCheck),
         Box::new(AdminNoEventCheck),
         Box::new(TierKeyCollisionCheck),
+        Box::new(StorageHasGetRaceCheck),
         Box::new(AdminZeroAddressCheck),
         Box::new(AdminNoGroupAuthCheck),
         Box::new(OwnershipPendingNotClearedCheck),

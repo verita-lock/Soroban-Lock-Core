@@ -114,3 +114,24 @@ Instance storage in Soroban has a TTL (time-to-live) and will expire if not peri
 - Checks the entire file, not per function.
 
 **Fixture:** `test-contracts/instance-ttl-vulnerable/`, `test-contracts/instance-ttl-safe/`
+
+---
+
+## `storage-has-get-race` (Medium)
+
+**Status:** Phase 1
+
+**What it detects**
+
+Potential race conditions between storage `has()` and `get()` calls on the same key, where the key could be removed between the two calls.
+
+**Why it matters**
+
+Race conditions can lead to unexpected behavior and security vulnerabilities. Using `get()` directly instead of `has()` followed by `get()` eliminates this race condition.
+
+**Limitations**
+
+- Only detects direct patterns in the same function
+- May miss cases where the key is stored in a variable
+
+**Fixture:** `test-contracts/storage-has-get-race-vulnerable/`, `test-contracts/storage-has-get-race-safe/`
