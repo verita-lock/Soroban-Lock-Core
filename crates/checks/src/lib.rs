@@ -10,6 +10,7 @@ pub mod contracttype;
 pub mod float_arithmetic;
 pub mod init_no_event;
 pub mod missing_ttl;
+pub mod no_events_at_all;
 pub mod no_std;
 pub mod overflow;
 pub mod panic_usage;
@@ -33,6 +34,7 @@ pub use contracttype::MissingContracttypeCheck;
 pub use float_arithmetic::FloatArithmeticCheck;
 pub use init_no_event::InitNoEventCheck;
 pub use missing_ttl::MissingTtlExtensionCheck;
+pub use no_events_at_all::NoEventsAtAllCheck;
 pub use no_std::NoStdCheck;
 pub use overflow::UncheckedArithmeticCheck;
 pub use panic_usage::PanicUsageCheck;
@@ -98,5 +100,6 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(TokenTransferUncheckedCheck),
         Box::new(MintAuthCheck),
         Box::new(InitNoEventCheck),
+        Box::new(NoEventsAtAllCheck),
     ]
 }
