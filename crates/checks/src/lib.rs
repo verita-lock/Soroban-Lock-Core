@@ -10,6 +10,8 @@ pub mod auth;
 pub mod auth_loop_dos;
 pub mod auth_shadow;
 pub mod authorize_as_contract;
+pub mod authorize_empty;
+pub mod deploy_arg_auth;
 pub mod balance_overflow;
 pub mod broken_pause;
 pub mod bump_to_ttl;
@@ -100,6 +102,8 @@ pub use auth::MissingRequireAuthCheck;
 pub use auth_loop_dos::AuthLoopDosCheck;
 pub use auth_shadow::AuthShadowCheck;
 pub use authorize_as_contract::AuthorizeAsContractCheck;
+pub use authorize_empty::AuthorizeEmptyCheck;
+pub use deploy_arg_auth::DeployArgAuthCheck;
 pub use balance_overflow::BalanceOverflowCheck;
 pub use broken_pause::BrokenPauseCheck;
 pub use bump_to_ttl::BumpToTtlCheck;
@@ -241,6 +245,10 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(SequenceNonceCheck),
         Box::new(AssertForAuthCheck),
         Box::new(AuthorizeAsContractCheck),
+        Box::new(AuthorizeEmptyCheck),
+        Box::new(AddressCmpInsteadOfAuthCheck),
+        Box::new(DeployArgAuthCheck),
+        Box::new(AuthTempStorageCheck),
         Box::new(MapKeyExplosionCheck),
         Box::new(DynamicSymbolKeyCheck),
         Box::new(InstanceVecGrowthCheck),
