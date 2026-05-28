@@ -20,6 +20,7 @@ pub mod balance_negative_check;
 pub mod balance_overflow;
 pub mod broken_pause;
 pub mod bump_to_ttl;
+pub mod catch_unwind;
 pub mod burn_auth;
 pub mod bytes_not_bytesn;
 pub mod bytes_oversized;
@@ -140,6 +141,7 @@ pub use balance_negative_check::BalanceNegativeCheck;
 pub use balance_overflow::BalanceOverflowCheck;
 pub use broken_pause::BrokenPauseCheck;
 pub use bump_to_ttl::BumpToTtlCheck;
+pub use catch_unwind::CatchUnwindCheck;
 pub use burn_auth::BurnAuthCheck;
 pub use bytes_not_bytesn::BytesNotBytesNCheck;
 pub use bytes_oversized::BytesOversizedCheck;
@@ -281,6 +283,7 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(UnsafeStoragePatternsCheck),
         Box::new(InstanceDomainMixingCheck),
         Box::new(PanicUsageCheck),
+        Box::new(CatchUnwindCheck),
         Box::new(PartialWriteOnErrorCheck),
         Box::new(MissingContracttypeCheck),
         Box::new(UnboundedStorageCheck),
