@@ -39,6 +39,7 @@ pub mod event_topic_runtime_string;
 pub mod extend_ttl_in_loop;
 pub mod float_arithmetic;
 pub mod hash_as_storage_key;
+pub mod hash_in_loop;
 pub mod host_result_ignored;
 pub mod i128_to_u64;
 pub mod instance_domain_mixing;
@@ -160,6 +161,7 @@ pub use event_topic_runtime_string::EventTopicRuntimeStringCheck;
 pub use extend_ttl_in_loop::ExtendTtlInLoopCheck;
 pub use float_arithmetic::FloatArithmeticCheck;
 pub use hash_as_storage_key::HashAsStorageKeyCheck;
+pub use hash_in_loop::HashInLoopCheck;
 pub use host_result_ignored::HostResultIgnoredCheck;
 pub use i128_to_u64::I128ToU64Check;
 pub use instance_domain_mixing::InstanceDomainMixingCheck;
@@ -354,5 +356,6 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(OwnershipPendingNotClearedCheck),
         Box::new(OwnershipNoApprovalInvalidationCheck),
         Box::new(SigVerifyInvertedCheck),
+        Box::new(HashInLoopCheck),
     ]
 }
