@@ -63,6 +63,7 @@ pub mod negative_deposit;
 pub mod no_param_no_auth;
 pub mod no_std;
 pub mod nonce_increment_order;
+pub mod nonce_in_temp;
 pub mod overflow;
 pub mod ownership_immediate;
 pub mod ownership_no_event;
@@ -184,6 +185,7 @@ pub use nested_loop_storage::NestedLoopStorageCheck;
 pub use no_param_no_auth::NoParamNoAuthCheck;
 pub use no_std::NoStdCheck;
 pub use nonce_increment_order::NonceIncrementOrderCheck;
+pub use nonce_in_temp::NonceInTempCheck;
 pub use overflow::UncheckedArithmeticCheck;
 pub use ownership_immediate::OwnershipImmediateCheck;
 pub use ownership_no_event::OwnershipNoEventCheck;
@@ -342,6 +344,7 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(LinearWhitelistScanCheck),
         Box::new(UncappedSlippageCheck),
         Box::new(NonceIncrementOrderCheck),
+        Box::new(NonceInTempCheck),
         Box::new(BalanceNegativeCheck),
         Box::new(MulBeforeDivCheck),
         Box::new(TokenSharedStorageCheck),
