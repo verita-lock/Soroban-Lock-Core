@@ -10,6 +10,7 @@ pub mod admin_stored_unused;
 pub mod admin_zero_address;
 pub mod admin_in_temp;
 pub mod admin_key_removal;
+pub mod no_admin;
 pub mod admin_no_event;
 pub mod admin_no_group_auth;
 pub mod admin_overwrite;
@@ -37,6 +38,8 @@ pub mod bytes_oversized;
 pub mod contracterror_attr;
 pub mod contracttype;
 pub mod crypto_no_cache;
+pub mod sha256_empty;
+pub mod ed25519_key_in_temp;
 pub mod current_contract_unwrap;
 pub mod debug_entrypoint;
 pub mod decimals_mismatch;
@@ -166,6 +169,7 @@ pub use admin_no_group_auth::AdminNoGroupAuthCheck;
 pub use admin_overwrite::AdminOverwriteCheck;
 pub use admin_zero_address::AdminZeroAddressCheck;
 pub use amount_mul_overflow::AmountMulOverflowCheck;
+pub use no_admin::NoAdminCheck;
 pub use assert_for_auth::AssertForAuthCheck;
 pub use auth::MissingRequireAuthCheck;
 pub use auth_loop_dos::AuthLoopDosCheck;
@@ -185,6 +189,8 @@ pub use bytes_oversized::BytesOversizedCheck;
 pub use contracterror_attr::ContracterrorAttrCheck;
 pub use contracttype::MissingContracttypeCheck;
 pub use crypto_no_cache::CryptoNoCacheCheck;
+pub use sha256_empty::Sha256EmptyCheck;
+pub use ed25519_key_in_temp::Ed25519KeyInTempCheck;
 pub use current_contract_unwrap::CurrentContractUnwrapCheck;
 pub use debug_entrypoint::DebugEntrypointCheck;
 pub use decimals_mismatch::DecimalsMismatchCheck;
@@ -340,6 +346,7 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(UnprotectedAdminCheck),
         Box::new(AdminOverwriteCheck),
         Box::new(AdminKeyRemovalCheck),
+        Box::new(NoAdminCheck),
         Box::new(UnsafeStoragePatternsCheck),
         Box::new(InstanceDomainMixingCheck),
         Box::new(PanicUsageCheck),
@@ -356,6 +363,8 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(TempGetNoHasCheck),
         Box::new(AmountMulOverflowCheck),
         Box::new(FloatArithmeticCheck),
+        Box::new(Sha256EmptyCheck),
+        Box::new(Ed25519KeyInTempCheck),
         Box::new(WeakRandomnessCheck),
         Box::new(ReentrancyCheck),
         Box::new(ResultErrIgnoredCheck),
