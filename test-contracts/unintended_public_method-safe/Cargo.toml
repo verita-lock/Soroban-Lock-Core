@@ -1,0 +1,7 @@
+[package]
+name = "unintended-public-method-safe"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+soroban-sdk = { version = "21.0", features = ["testutils"] }

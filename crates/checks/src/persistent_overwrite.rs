@@ -2,6 +2,7 @@
 
 use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
+use quote::ToTokens;
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
 use syn::{Block, Expr, ExprMethodCall, File, Stmt};
@@ -56,7 +57,7 @@ fn extract_key_from_call(m: &ExprMethodCall) -> Option<String> {
     if m.args.is_empty() {
         return None;
     }
-    Some(format!("{:?}", m.args[0]))
+    Some(m.args[0].to_token_stream().to_string())
 }
 
 struct PersistentVisitor<'a> {

@@ -83,8 +83,8 @@ impl Visit<'_> for StorageKeyExtractor<'_> {
 }
 
 fn extract_key_name(arg: &Option<&syn::Expr>) -> Option<String> {
-    let arg = arg?;
-    match arg {
+    let arg = arg.as_ref()?;
+    match *arg {
         Expr::Reference(r) => extract_key_name_from_expr(&r.expr),
         other => extract_key_name_from_expr(other),
     }

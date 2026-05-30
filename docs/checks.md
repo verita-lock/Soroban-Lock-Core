@@ -117,21 +117,21 @@ Instance storage in Soroban has a TTL (time-to-live) and will expire if not peri
 
 ---
 
-## `unauthorized-storage-read` (Medium)
+## `storage-key-collision` (Medium)
 
 **Status:** Phase 1
 
 **What it detects**
 
-Storage `get` or `has` calls in `#[contractimpl]` functions that do not have a corresponding `env.require_auth()` call in the same function.
+Storage keys with similar names that could lead to accidental overwrites, such as "owner", "owner_addr", and "owner_address" in the same contract.
 
 **Why it matters**
 
-Unauthorized storage reads can expose sensitive data to unauthorized callers. Proper authorization should be enforced before accessing sensitive storage.
+Similar key names can cause developers to accidentally use the wrong key when reading or writing storage, leading to data corruption or security vulnerabilities. Distinct key names help prevent these mistakes.
 
 **Limitations**
 
-- Only detects direct auth calls in the same function, not through helper functions
-- May miss cases where auth is performed on a different variable name
+- Only detects string literal keys, not symbol-based keys
+- May flag some legitimate cases where similar keys are intentionally used
 
-**Fixture:** `test-contracts/unauthorized-storage-read-vulnerable/`, `test-contracts/unauthorized-storage-read-safe/`
+**Fixture:** `test-contracts/storage-key-collision-vulnerable/`, `test-contracts/storage-key-collision-safe/`
