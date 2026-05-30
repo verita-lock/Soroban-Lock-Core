@@ -107,6 +107,7 @@ pub mod token_burn_auth;
 pub mod token_shared_storage;
 pub mod token_transfer_unchecked;
 pub mod transfer_to_self;
+pub mod try_into_unwrap;
 pub mod ttl_arg_order;
 pub mod ttl_before_write;
 pub mod ttl_min_zero;
@@ -239,6 +240,7 @@ pub use token_burn_auth::TokenBurnAuthCheck;
 pub use token_shared_storage::TokenSharedStorageCheck;
 pub use token_transfer_unchecked::TokenTransferUncheckedCheck;
 pub use transfer_to_self::TransferToSelfCheck;
+pub use try_into_unwrap::TryIntoUnwrapCheck;
 pub use ttl_arg_order::TtlArgOrderCheck;
 pub use ttl_before_write::TtlBeforeWriteCheck;
 pub use ttl_min_zero::TtlMinZeroCheck;
@@ -384,5 +386,6 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(VecMapTupleConvertCheck),
         Box::new(OwnershipPendingNotClearedCheck),
         Box::new(OwnershipNoApprovalInvalidationCheck),
+        Box::new(TryIntoUnwrapCheck),
     ]
 }
