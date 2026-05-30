@@ -2,6 +2,7 @@
 
 use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
+use quote::ToTokens;
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
 use syn::{Expr, ExprMethodCall, File};
@@ -31,17 +32,13 @@ impl Check for StorageHasGetMismatchCheck {
 }
 
 fn expr_to_string(expr: &Expr) -> String {
-    match expr {
-        Expr::Path(p) => p.path.segments.iter().map(|s| s.ident.to_string()).collect::<Vec<_>>().join("::"),
-        Expr::Lit(l) => format!("{:?}", l.lit),
-        _ => format!("{:?}", expr),
-    }
+    expr.to_token_stream().to_string()
 }
 
 fn get_storage_tier(m: &ExprMethodCall) -> Option<String> {
     let mut current = &m.receiver;
     loop {
-        match current {
+        match &**current {
             Expr::MethodCall(mc) => {
                 if matches!(mc.method.to_string().as_str(), "persistent" | "instance" | "temporary") {
                     return Some(mc.method.to_string());
@@ -63,7 +60,7 @@ impl Visit<'_> for StorageVisitor<'_> {
         let mut has_calls: Vec<(String, String, usize)> = Vec::new();
         
         for stmt in &i.stmts {
-            if let syn::Stmt::Expr(Expr::MethodCall(m), _) | syn::Stmt::Semi(Expr::MethodCall(m), _) = stmt {
+            if let syn::Stmt::Expr(Expr::MethodCall(m), _) = stmt {
                 if m.method == "has" {
                     if let Some(tier) = get_storage_tier(m) {
                         if let Some(arg) = m.args.first() {

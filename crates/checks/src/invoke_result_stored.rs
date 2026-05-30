@@ -44,8 +44,8 @@ impl<'a> Visit<'a> for InvokeResultVisitor<'a> {
         // Detect: let <ident> = env.invoke_contract(...)
         if let Stmt::Local(local) = i {
             if let Pat::Ident(pat_ident) = &local.pat {
-                if let Some((_, init_expr)) = &local.init {
-                    if is_invoke_contract_call(init_expr) {
+                if let Some(init_expr) = &local.init {
+                    if is_invoke_contract_call(&init_expr.expr) {
                         self.invoke_vars.push(pat_ident.ident.to_string());
                     }
                 }
