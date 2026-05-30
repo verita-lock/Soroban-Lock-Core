@@ -4,6 +4,8 @@
 //! or incompatible types can lead to unexpected behavior and security vulnerabilities.
 
 use crate::{Check, Finding, Severity};
+use quote::ToTokens;
+use std::collections::HashMap;
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
 use syn::{Expr, ExprMethodCall, File, Lit, LitStr, Pat, Stmt};
@@ -48,9 +50,31 @@ impl Check for StorageTypeVersionCheck {
                 description: format!("Contract uses multiple storage types: {:?}. Consider using a consistent storage tier for better predictability and security.", storage_types),
             });
         }
-        
-        out
+        Expr::Field(f) => receiver_chain_contains_storage(&f.base),
+        _ => false,
     }
+}
+
+fn is_storage_set_call(m: &ExprMethodCall) -> bool {
+    m.method == "set" && receiver_chain_contains_storage(&m.receiver)
+}
+
+fn is_storage_get_call(m: &ExprMethodCall) -> bool {
+    m.method == "get" && receiver_chain_contains_storage(&m.receiver)
+}
+
+fn extract_key_from_call(m: &ExprMethodCall) -> Option<String> {
+    if m.args.is_empty() {
+        return None;
+    }
+    Some(m.args[0].to_token_stream().to_string())
+}
+
+fn extract_value_type_from_set(m: &ExprMethodCall) -> Option<String> {
+    if m.args.len() < 2 {
+        return None;
+    }
+    Some(m.args[1].to_token_stream().to_string())
 }
 
 struct StorageTypeVisitor<'a> {

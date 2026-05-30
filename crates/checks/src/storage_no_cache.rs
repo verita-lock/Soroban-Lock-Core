@@ -23,7 +23,6 @@ impl Check for StorageNoCacheCheck {
             let mut v = StorageVisitor {
                 fn_name: fn_name.clone(),
                 storage_calls: Vec::new(),
-                out: &mut out,
             };
             v.visit_block(&method.block);
             
@@ -61,13 +60,12 @@ fn is_storage_tier_call(m: &ExprMethodCall) -> bool {
     }
 }
 
-struct StorageVisitor<'a> {
+struct StorageVisitor {
     fn_name: String,
     storage_calls: Vec<usize>,
-    out: &'a mut Vec<Finding>,
 }
 
-impl Visit<'_> for StorageVisitor<'_> {
+impl<'ast> Visit<'ast> for StorageVisitor {
     fn visit_expr_method_call(&mut self, i: &ExprMethodCall) {
         if is_storage_tier_call(i) {
             self.storage_calls.push(i.span().start().line);

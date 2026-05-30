@@ -42,7 +42,7 @@ impl Check for OwnershipImmediateCheck {
     }
 
     fn run(&self, file: &File, _source: &str) -> Vec<Finding> {
-        let methods: Vec<_> = contractimpl_functions(file).collect();
+        let methods: Vec<_> = contractimpl_functions(file).into_iter().collect();
 
         // Check whether a safe accept function exists anywhere in the impl block.
         let has_accept_fn = methods

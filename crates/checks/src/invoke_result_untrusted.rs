@@ -77,9 +77,9 @@ struct InvokeResultUntrustedVisitor<'a> {
 impl<'ast> Visit<'ast> for InvokeResultUntrustedVisitor<'_> {
     fn visit_stmt(&mut self, i: &'ast Stmt) {
         if let Stmt::Local(local) = i {
-            if let Some((_, init_expr)) = &local.init {
+            if let Some(init_expr) = &local.init {
                 let mut expr = &init_expr.expr;
-                if let Expr::MethodCall(cast_call) = expr {
+                if let Expr::MethodCall(cast_call) = &**expr {
                     if is_cast_method(cast_call)
                         && expr_contains_invoke_contract(&cast_call.receiver)
                     {
@@ -126,7 +126,7 @@ impl<'ast> Visit<'ast> for InvokeResultUntrustedVisitor<'_> {
             if let Some((_, guard)) = &arm.guard {
                 self.visit_expr(guard);
             }
-            self.visit_block(&arm.body);
+            self.visit_expr(&arm.body);
         }
     }
 

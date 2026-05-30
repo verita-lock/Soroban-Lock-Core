@@ -117,21 +117,21 @@ Instance storage in Soroban has a TTL (time-to-live) and will expire if not peri
 
 ---
 
-## `storage-type-version` (Medium)
+## `storage-key-collision` (Medium)
 
 **Status:** Phase 1
 
 **What it detects**
 
-Inconsistent use of storage types in the same contract, such as mixing persistent, instance, and temporary storage tiers.
+Storage keys with similar names that could lead to accidental overwrites, such as "owner", "owner_addr", and "owner_address" in the same contract.
 
 **Why it matters**
 
-Using multiple storage tiers can lead to unexpected behavior, increased complexity, and potential security vulnerabilities. Consistent storage usage improves predictability and maintainability.
+Similar key names can cause developers to accidentally use the wrong key when reading or writing storage, leading to data corruption or security vulnerabilities. Distinct key names help prevent these mistakes.
 
 **Limitations**
 
-- Only detects direct storage type usage, not through helper functions
-- May flag legitimate cases where different storage tiers are intentionally used for different purposes
+- Only detects string literal keys, not symbol-based keys
+- May flag some legitimate cases where similar keys are intentionally used
 
-**Fixture:** `test-contracts/storage-type-version-vulnerable/`, `test-contracts/storage-type-version-safe/`
+**Fixture:** `test-contracts/storage-key-collision-vulnerable/`, `test-contracts/storage-key-collision-safe/`
