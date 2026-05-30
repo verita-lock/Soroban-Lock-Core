@@ -70,7 +70,7 @@ fn expr_uses_param(expr: &Expr, params: &HashSet<String>) -> bool {
         }
         Expr::Unary(u) => expr_uses_param(&u.expr, params),
         Expr::Cast(c) => expr_uses_param(&c.expr, params),
-        Expr::AddrOf(a) => expr_uses_param(&a.expr, params),
+        Expr::Reference(r) => expr_uses_param(&r.expr, params),
         Expr::Try(t) => expr_uses_param(&t.expr, params),
         Expr::Match(m) => expr_uses_param(&m.expr, params),
         _ => false,
@@ -142,7 +142,7 @@ struct InvokeFuncFromInputVisitor<'a> {
 impl<'ast> Visit<'ast> for InvokeFuncFromInputVisitor<'_> {
     fn visit_stmt(&mut self, i: &'ast Stmt) {
         if let Stmt::Local(local) = i {
-            if let Some((_, init_expr)) = &local.init {
+            if let Some(init_expr) = &local.init {
                 if is_user_input_symbol(&init_expr.expr, self.params) {
                     if let Pat::Ident(pi) = &local.pat {
                         self.symbol_vars.push(pi.ident.to_string());
