@@ -2,6 +2,7 @@
 
 use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
+use quote::ToTokens;
 use std::collections::HashMap;
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
@@ -83,15 +84,14 @@ fn extract_key_from_call(m: &ExprMethodCall) -> Option<String> {
     if m.args.is_empty() {
         return None;
     }
-    Some(format!("{:?}", m.args[0]))
+    Some(m.args[0].to_token_stream().to_string())
 }
 
 fn extract_value_type_from_set(m: &ExprMethodCall) -> Option<String> {
     if m.args.len() < 2 {
         return None;
     }
-    // Try to infer type from the second argument
-    Some(format!("{:?}", m.args[1]))
+    Some(m.args[1].to_token_stream().to_string())
 }
 
 struct TypeCollector<'a> {

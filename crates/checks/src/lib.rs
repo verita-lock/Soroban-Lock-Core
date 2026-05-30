@@ -3,7 +3,10 @@
 pub mod address_cmp_instead_of_auth;
 pub mod address_from_str;
 pub mod admin;
+pub mod admin_eq_instead_of_auth;
 pub mod admin_no_group_auth;
+pub mod admin_no_remove;
+pub mod admin_stored_unused;
 pub mod admin_zero_address;
 pub mod admin_in_temp;
 pub mod admin_key_removal;
@@ -14,12 +17,18 @@ pub mod assert_for_auth;
 pub mod auth;
 pub mod auth_loop_dos;
 pub mod auth_shadow;
+pub mod auth_temp_storage;
 pub mod authorize_as_contract;
 pub mod authorize_empty;
 pub mod balance_negative_check;
 pub mod balance_overflow;
+pub mod burn_no_event;
+pub mod deploy_arg_auth;
+pub mod deploy_salt_predictable;
+pub mod deploy_unverified;
 pub mod broken_pause;
 pub mod bump_to_ttl;
+pub mod catch_unwind;
 pub mod burn_auth;
 pub mod bytes_not_bytesn;
 pub mod bytes_oversized;
@@ -31,6 +40,7 @@ pub mod debug_entrypoint;
 pub mod decimals_mismatch;
 pub mod deploy_arg_auth;
 pub mod deploy_arg_auth;
+pub mod deployer_reuse;
 pub mod dynamic_symbol_key;
 pub mod env_in_struct;
 pub mod event_duplicate;
@@ -42,12 +52,15 @@ pub mod float_arithmetic;
 pub mod hash_as_storage_key;
 pub mod host_result_ignored;
 pub mod i128_to_u64;
+pub mod invoke_func_from_input;
+pub mod invoke_result_untrusted;
 pub mod instance_domain_mixing;
 pub mod instance_remove_critical;
 pub mod instance_set_no_has;
 pub mod instance_ttl;
 pub mod instance_vec_growth;
 pub mod invoke_store_no_event;
+pub mod loop_bound_no_cap;
 pub mod invoke_unchecked_cast;
 pub mod key_length_exceeded;
 pub mod key_prefix_collision;
@@ -58,6 +71,7 @@ pub mod map_key_explosion;
 pub mod map_user_key_bloat;
 pub mod migration_guard;
 pub mod mint_auth;
+pub mod mint_no_cap;
 pub mod missing_ttl;
 pub mod mul_before_div;
 pub mod negative_deposit;
@@ -95,6 +109,7 @@ pub mod token_burn_auth;
 pub mod token_shared_storage;
 pub mod token_transfer_unchecked;
 pub mod transfer_to_self;
+pub mod try_into_unwrap;
 pub mod ttl_arg_order;
 pub mod ttl_before_write;
 pub mod ttl_min_zero;
@@ -111,6 +126,7 @@ pub mod unvalidated_invoke_target;
 pub mod unvalidated_price;
 mod util;
 pub mod vec_get_unwrap;
+pub mod vec_map_tuple_convert;
 pub mod vec_mutate_in_loop;
 pub mod vec_push_in_loop;
 pub mod vesting_cliff;
@@ -124,7 +140,10 @@ pub mod zero_transfer_event;
 pub use address_cmp_instead_of_auth::AddressCmpInsteadOfAuthCheck;
 pub use address_from_str::AddressFromStrCheck;
 pub use admin::UnprotectedAdminCheck;
+pub use admin_eq_instead_of_auth::AdminEqInsteadOfAuthCheck;
 pub use admin_no_group_auth::AdminNoGroupAuthCheck;
+pub use admin_no_remove::AdminNoRemoveCheck;
+pub use admin_stored_unused::AdminStoredUnusedCheck;
 pub use admin_zero_address::AdminZeroAddressCheck;
 pub use admin_in_temp::AdminInTempCheck;
 pub use admin_key_removal::AdminKeyRemovalCheck;
@@ -135,13 +154,16 @@ pub use assert_for_auth::AssertForAuthCheck;
 pub use auth::MissingRequireAuthCheck;
 pub use auth_loop_dos::AuthLoopDosCheck;
 pub use auth_shadow::AuthShadowCheck;
+pub use auth_temp_storage::AuthTempStorageCheck;
 pub use authorize_as_contract::AuthorizeAsContractCheck;
 pub use authorize_empty::AuthorizeEmptyCheck;
 pub use balance_negative_check::BalanceNegativeCheck;
 pub use balance_overflow::BalanceOverflowCheck;
 pub use broken_pause::BrokenPauseCheck;
 pub use bump_to_ttl::BumpToTtlCheck;
+pub use catch_unwind::CatchUnwindCheck;
 pub use burn_auth::BurnAuthCheck;
+pub use burn_no_event::BurnNoEventCheck;
 pub use bytes_not_bytesn::BytesNotBytesNCheck;
 pub use bytes_oversized::BytesOversizedCheck;
 pub use contracterror_attr::ContracterrorAttrCheck;
@@ -152,6 +174,8 @@ pub use debug_entrypoint::DebugEntrypointCheck;
 pub use decimals_mismatch::DecimalsMismatchCheck;
 pub use deploy_arg_auth::DeployArgAuthCheck;
 pub use deploy_arg_auth::DeployArgAuthCheck;
+pub use deploy_salt_predictable::DeploySaltPredictableCheck;
+pub use deploy_unverified::DeployUnverifiedCheck;
 pub use dynamic_symbol_key::DynamicSymbolKeyCheck;
 pub use env_in_struct::EnvInStructCheck;
 pub use event_duplicate::EventDuplicateCheck;
@@ -170,6 +194,8 @@ pub use instance_ttl::InstanceTtlCheck;
 pub use instance_vec_growth::InstanceVecGrowthCheck;
 pub use invoke_store_no_event::InvokeStoreNoEventCheck;
 pub use invoke_unchecked_cast::InvokeUncheckedCastCheck;
+pub use invoke_func_from_input::InvokeFuncFromInputCheck;
+pub use invoke_result_untrusted::InvokeResultUntrustedCheck;
 pub use key_prefix_collision::KeyPrefixCollisionCheck;
 pub use linear_whitelist_scan::LinearWhitelistScanCheck;
 pub use lock_period_truncation::LockPeriodTruncationCheck;
@@ -179,10 +205,12 @@ pub use map_key_explosion::MapKeyExplosionCheck;
 pub use map_user_key_bloat::MapUserKeyBloatCheck;
 pub use migration_guard::MigrationGuardCheck;
 pub use mint_auth::MintAuthCheck;
+pub use mint_no_cap::MintNoCapCheck;
 pub use missing_ttl::MissingTtlExtensionCheck;
 pub use mul_before_div::MulBeforeDivCheck;
 pub use negative_deposit::NegativeDepositCheck;
 pub use nested_loop_storage::NestedLoopStorageCheck;
+pub use negative_deposit::NegativeDepositCheck;
 pub use no_param_no_auth::NoParamNoAuthCheck;
 pub use no_std::NoStdCheck;
 pub use nonce_increment_order::NonceIncrementOrderCheck;
@@ -216,6 +244,7 @@ pub use token_burn_auth::TokenBurnAuthCheck;
 pub use token_shared_storage::TokenSharedStorageCheck;
 pub use token_transfer_unchecked::TokenTransferUncheckedCheck;
 pub use transfer_to_self::TransferToSelfCheck;
+pub use try_into_unwrap::TryIntoUnwrapCheck;
 pub use ttl_arg_order::TtlArgOrderCheck;
 pub use ttl_before_write::TtlBeforeWriteCheck;
 pub use ttl_min_zero::TtlMinZeroCheck;
@@ -230,6 +259,7 @@ pub use uncapped_slippage::UncappedSlippageCheck;
 pub use unlimited_allowance::UnlimitedAllowanceCheck;
 pub use unvalidated_price::UnvalidatedPriceCheck;
 pub use vec_mutate_in_loop::VecMutateInLoopCheck;
+pub use vec_map_tuple_convert::VecMapTupleConvertCheck;
 pub use vec_push_in_loop::VecPushInLoopCheck;
 pub use vesting_cliff::VestingCliffCheck;
 pub use weak_randomness::WeakRandomnessCheck;
@@ -283,6 +313,7 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(UnsafeStoragePatternsCheck),
         Box::new(InstanceDomainMixingCheck),
         Box::new(PanicUsageCheck),
+        Box::new(CatchUnwindCheck),
         Box::new(PartialWriteOnErrorCheck),
         Box::new(MissingContracttypeCheck),
         Box::new(UnboundedStorageCheck),
@@ -301,12 +332,15 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(ContracterrorAttrCheck),
         Box::new(TokenBurnAuthCheck),
         Box::new(MintAuthCheck),
+        Box::new(MintNoCapCheck),
+        Box::new(BurnNoEventCheck),
         Box::new(SequenceNonceCheck),
         Box::new(AssertForAuthCheck),
         Box::new(AuthorizeAsContractCheck),
         Box::new(AuthorizeEmptyCheck),
         Box::new(AddressCmpInsteadOfAuthCheck),
         Box::new(DeployArgAuthCheck),
+        Box::new(DeployerReuseCheck),
         Box::new(AuthTempStorageCheck),
         Box::new(MapKeyExplosionCheck),
         Box::new(DynamicSymbolKeyCheck),
@@ -351,8 +385,12 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(TierKeyCollisionCheck),
         Box::new(AdminZeroAddressCheck),
         Box::new(AdminNoGroupAuthCheck),
+        Box::new(AdminNoRemoveCheck),
+        Box::new(AdminStoredUnusedCheck),
+        Box::new(AdminEqInsteadOfAuthCheck),
+        Box::new(VecMapTupleConvertCheck),
         Box::new(OwnershipPendingNotClearedCheck),
         Box::new(OwnershipNoApprovalInvalidationCheck),
-        Box::new(ExpectLeaksCheck),
+        Box::new(TryIntoUnwrapCheck),
     ]
 }

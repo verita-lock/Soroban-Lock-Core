@@ -24,7 +24,6 @@ impl Check for DeployUnverifiedCheck {
                 fn_name,
                 deploy_vars: Vec::new(),
                 verified: HashSet::new(),
-                out: &mut out,
             };
             visitor.visit_block(&method.block);
             for (var_name, line) in visitor.deploy_vars {
@@ -36,8 +35,7 @@ impl Check for DeployUnverifiedCheck {
                         line,
                         function_name: visitor.fn_name.clone(),
                         description: format!(
-                            "Method `{}` deploys a sub-contract and uses the returned address "
-                            "without verifying that it exists via `env.is_contract(...)`.",
+                            "Method `{}` deploys a sub-contract and uses the returned address without verifying that it exists via `env.is_contract(...)`.",
                             visitor.fn_name
                         ),
                     });
@@ -71,17 +69,16 @@ fn expr_ident_name(expr: &Expr) -> Option<String> {
     }
 }
 
-struct DeployUnverifiedVisitor<'a> {
+struct DeployUnverifiedVisitor {
     fn_name: String,
     deploy_vars: Vec<(String, usize)>,
     verified: HashSet<String>,
-    out: &'a mut Vec<Finding>,
 }
 
-impl<'ast> Visit<'ast> for DeployUnverifiedVisitor<'_> {
+impl<'ast> Visit<'ast> for DeployUnverifiedVisitor {
     fn visit_stmt(&mut self, i: &'ast Stmt) {
         if let Stmt::Local(local) = i {
-            if let Some((_, init_expr)) = &local.init {
+            if let Some(init_expr) = &local.init {
                 if let Expr::MethodCall(m) = &*init_expr.expr {
                     if is_deploy_call(m) {
                         if let Pat::Ident(pi) = &local.pat {
