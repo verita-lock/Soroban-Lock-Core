@@ -217,6 +217,79 @@ See [docs/checks.md](docs/checks.md) for implemented rules and [CONTRIBUTING.md]
 
 ---
 
+## Testing
+
+The Soroban Guard analyzer includes comprehensive test coverage for all implemented checks. Tests are embedded in each check module and validate both positive cases (findings detected) and negative cases (findings correctly ignored).
+
+### What tests cover
+
+- **150+ security checks**: Unit tests for each check in `crates/checks/src/` verify that detectors correctly identify vulnerabilities and avoid false positives
+- **Check categories**: 
+  - Authentication checks (`auth.rs`, `require_auth`, etc.)
+  - Storage safety checks (`storage.rs`, `instance_*`, `temp_*`, etc.)
+  - Arithmetic overflow/underflow checks (`overflow.rs`, `*_mul_overflow`, etc.)
+  - Admin/owner privilege checks (`admin.rs`, `ownership_*`, etc.)
+  - Event and logging checks (`event_*.rs`, `invoke_store_no_event`, etc.)
+  - Contract deployment and initialization checks (`deploy_*.rs`, `init_*`, etc.)
+  - Cryptographic checks (`ed25519_unchecked`, `secp256k1_unchecked`, etc.)
+  - And many more...
+
+### Run all tests
+
+```bash
+cargo test
+```
+
+### Run tests with output
+
+To see test names and output (useful for debugging):
+
+```bash
+cargo test -- --nocapture
+```
+
+Or with parallel execution disabled:
+
+```bash
+cargo test -- --test-threads=1 --nocapture
+```
+
+### Run a specific check's tests
+
+Run tests for a single check (e.g., `self_transfer` check):
+
+```bash
+cargo test self_transfer
+```
+
+Or for a specific test function:
+
+```bash
+cargo test self_transfer::tests::flags_transfer_without_ne_check
+```
+
+### Run tests in a specific crate
+
+Test only the `checks` crate:
+
+```bash
+cargo test -p soroban-guard-checks
+```
+
+Test only the `analyzer` crate:
+
+```bash
+cargo test -p soroban-guard-analyzer
+```
+
+### Test organization
+
+- **`crates/checks/src/`**: Each `.rs` file implements a `Check` trait and includes a `#[cfg(test)] mod tests {}` block with multiple test functions
+- **Test naming**: Tests typically follow patterns like `flags_*`, `passes_*`, `ignores_*` to indicate what behavior is being validated
+- **Test data**: Tests use Rust code snippets (via `syn::parse_file`) to simulate smart contract source code and verify detection logic
+
+---
+
 ## License
 
 MIT OR Apache-2.0 (see workspace `Cargo.toml`).

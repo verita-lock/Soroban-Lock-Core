@@ -35,8 +35,8 @@ struct LoopVisitor<'a> {
     out: &'a mut Vec<Finding>,
 }
 
-impl<'a> Visit<'a> for LoopVisitor<'a> {
-    fn visit_expr_for_loop(&mut self, i: &ExprForLoop) {
+impl<'ast> Visit<'ast> for LoopVisitor<'_> {
+    fn visit_expr_for_loop(&mut self, i: &'ast ExprForLoop) {
         let iter_var = extract_pat_ident(&i.pat);
         if let Some(var_name) = iter_var {
             let mut body_visitor = LoopBodyVisitor {

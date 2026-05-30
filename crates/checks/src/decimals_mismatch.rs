@@ -22,7 +22,7 @@ impl Check for DecimalsMismatchCheck {
 
     fn run(&self, file: &File, _source: &str) -> Vec<Finding> {
         let mut out = Vec::new();
-        let methods: Vec<_> = contractimpl_functions(file).collect();
+        let methods: Vec<_> = contractimpl_functions(file).into_iter().collect();
 
         // Find `decimals()` returning a literal integer.
         let declared = methods.iter().find_map(|m| {

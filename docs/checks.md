@@ -114,3 +114,24 @@ Instance storage in Soroban has a TTL (time-to-live) and will expire if not peri
 - Checks the entire file, not per function.
 
 **Fixture:** `test-contracts/instance-ttl-vulnerable/`, `test-contracts/instance-ttl-safe/`
+
+---
+
+## `storage-key-collision` (Medium)
+
+**Status:** Phase 1
+
+**What it detects**
+
+Storage keys with similar names that could lead to accidental overwrites, such as "owner", "owner_addr", and "owner_address" in the same contract.
+
+**Why it matters**
+
+Similar key names can cause developers to accidentally use the wrong key when reading or writing storage, leading to data corruption or security vulnerabilities. Distinct key names help prevent these mistakes.
+
+**Limitations**
+
+- Only detects string literal keys, not symbol-based keys
+- May flag some legitimate cases where similar keys are intentionally used
+
+**Fixture:** `test-contracts/storage-key-collision-vulnerable/`, `test-contracts/storage-key-collision-safe/`

@@ -1,0 +1,11 @@
+[package]
+name = "result_non_exhaustive-safe"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+soroban-sdk = "20.0"

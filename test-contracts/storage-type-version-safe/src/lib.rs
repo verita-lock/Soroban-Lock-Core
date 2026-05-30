@@ -1,23 +1,18 @@
+//! Safe contract that does not trigger the storage-type-version check.
+
 #![no_std]
-use soroban_sdk::{contract, contractimpl, symbol_short, Env};
+use soroban_sdk::{contract, contractimpl, symbol_short, Env, Symbol};
 
 #[contract]
-pub struct SafeContract;
+pub struct StorageTypeVersionSafe;
+
+const KEY: Symbol = symbol_short!("key");
 
 #[contractimpl]
-impl SafeContract {
-    pub fn store_as_u32(env: Env) {
-        // ✅ Storing as u32
-        env.storage()
-            .instance()
-            .set(&symbol_short!("value"), &42u32);
-    }
-
-    pub fn retrieve_as_u32(env: Env) -> u32 {
-        // ✅ Retrieving as u32 - consistent type
-        env.storage()
-            .instance()
-            .get::<_, u32>(&symbol_short!("value"))
-            .unwrap_or(0)
+impl StorageTypeVersionSafe {
+    pub fn single_storage(env: Env) {
+        // Only uses persistent storage
+        env.storage().persistent().set(&KEY, &1);
+        env.storage().persistent().set(&KEY, &2);
     }
 }

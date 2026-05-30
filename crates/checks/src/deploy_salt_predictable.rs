@@ -4,7 +4,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Expr, ExprMethodCall, File, Pat, PatType, Stmt};
+use syn::{Expr, ExprMethodCall, File, Pat, Stmt};
 
 const CHECK_NAME: &str = "deploy-salt-predictable";
 
@@ -50,7 +50,9 @@ fn expr_contains_ledger_rand(expr: &Expr, ledger_vars: &[String]) -> bool {
                 return true;
             }
             expr_contains_ledger_rand(&m.receiver, ledger_vars)
-                || m.args.iter().any(|arg| expr_contains_ledger_rand(arg, ledger_vars))
+                || m.args
+                    .iter()
+                    .any(|arg| expr_contains_ledger_rand(arg, ledger_vars))
         }
         Expr::Path(path) => path
             .path
@@ -78,7 +80,7 @@ struct DeploySaltPredictableVisitor<'a> {
 impl<'ast> Visit<'ast> for DeploySaltPredictableVisitor<'_> {
     fn visit_stmt(&mut self, i: &'ast Stmt) {
         if let Stmt::Local(local) = i {
-            if let Some((_, init_expr)) = &local.init {
+            if let Some(init_expr) = &local.init {
                 if expr_contains_ledger_rand(&init_expr.expr, &self.ledger_vars) {
                     if let Pat::Ident(pi) = &local.pat {
                         self.ledger_vars.push(pi.ident.to_string());

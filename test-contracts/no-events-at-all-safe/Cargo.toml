@@ -1,0 +1,24 @@
+[package]
+name = "no-events-at-all-safe"
+version = "0.1.0"
+description = "Contract with storage operations and event publish calls — should not trigger `no-events-at-all`"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+soroban-sdk = "22.0.0"
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+panic = "abort"
+codegen-units = 1
+lto = true
+
+[profile.release-with-logs]
+inherits = "release"
+debug = 1
