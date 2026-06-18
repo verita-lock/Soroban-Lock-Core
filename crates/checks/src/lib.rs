@@ -157,6 +157,7 @@ pub mod while_host_condition;
 pub mod withdraw_auth;
 pub mod wrapping_balance_op;
 pub mod zero_amount;
+pub mod zero_divisor;
 pub mod zero_transfer_event;
 
 pub use address_cmp_instead_of_auth::AddressCmpInsteadOfAuthCheck;
@@ -307,6 +308,7 @@ pub use while_host_condition::WhileHostConditionCheck;
 pub use withdraw_auth::WithdrawAuthCheck;
 pub use wrapping_balance_op::WrappingBalanceOpCheck;
 pub use zero_amount::ZeroAmountCheck;
+pub use zero_divisor::ZeroDivisorCheck;
 pub use zero_transfer_event::ZeroTransferEventCheck;
 
 pub use dead_storage_code::DeadStorageCodeCheck;
@@ -368,6 +370,7 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
         Box::new(UnboundedStorageCheck),
         Box::new(UnboundedInputStorageCheck),
         Box::new(ZeroAmountCheck),
+        Box::new(ZeroDivisorCheck),
         Box::new(SelfTransferCheck),
         Box::new(SequenceAsKeyCheck),
         Box::new(NoStdCheck),
