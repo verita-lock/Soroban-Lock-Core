@@ -135,3 +135,30 @@ Similar key names can cause developers to accidentally use the wrong key when re
 - May flag some legitimate cases where similar keys are intentionally used
 
 **Fixture:** `test-contracts/storage-key-collision-vulnerable/`, `test-contracts/storage-key-collision-safe/`
+
+---
+
+## `zero-divisor` (High)
+
+**Status:** Phase 2
+
+**What it detects**
+
+Inside `#[contractimpl]` methods, any `/` (division) or `%` (remainder) where the right-hand operand is a function parameter and the method body does **not** contain a zero-check guard for that parameter anywhere.
+
+A guard is recognized as:
+
+- `assert!(param ...)` — an `assert!` macro whose token stream contains the parameter name (textual heuristic).
+- `if cond { ... }` — an `if` expression whose condition contains both the parameter name and the literal `"0"`.
+
+**Why it matters**
+
+Integer division or remainder by zero causes a panic in Rust, which terminates the entire Soroban transaction. An attacker who controls any fee, rate, or price argument can pass `0` to permanently brick any entrypoint that divides by that parameter without checking for zero first.
+
+**Limitations**
+
+- Syntactic, not type-aware: any parameter matching the name triggers the finding; the check does not verify the parameter is actually a numeric type.
+- Guards are detected by substring match anywhere in the body, not by dataflow.
+- `assert_eq!(param, 0)` (two-argument form) is not recognized — only the single-argument `assert!` form counts.
+
+**Fixture:** `test-contracts/zero-divisor-vulnerable/`, `test-contracts/zero-divisor-safe/`
