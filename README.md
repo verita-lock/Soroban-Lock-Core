@@ -1,24 +1,24 @@
-# Soroban Guard Core
+# Soroban Lock Core
 
 > Static analysis engine for [Soroban](https://soroban.stellar.org/) smart contracts — securing the Stellar blockchain, one contract at a time.
 
-Soroban Guard Core is a CLI-based static analyzer for Rust smart contracts deployed on the **Stellar network** via the Soroban smart contract platform. It detects vulnerabilities before your code ever touches the chain.
+Soroban Lock Core is a CLI-based static analyzer for Rust smart contracts deployed on the **Stellar network** via the Soroban smart contract platform. It detects vulnerabilities before your code ever touches the chain.
 
 This is the **core engine** in a three-repo setup:
 
 | Repo | URL |
 |------|-----|
-| **Core** (this) | [github.com/Veritas-Vaults-Network/Soroban-Guard-Core](https://github.com/Veritas-Vaults-Network/Soroban-Guard-Core) |
-| **Web dashboard** | [github.com/Veritas-Vaults-Network/Soroban-Guard-web](https://github.com/Veritas-Vaults-Network/Soroban-Guard-web) |
-| **Contracts** | [github.com/Veritas-Vaults-Network/soroban-guard-contracts](https://github.com/Veritas-Vaults-Network/soroban-guard-contracts) |
+| **Core** (this) | [github.com/verita-lock/Soroban-Lock-Core](https://github.com/verita-lock/Soroban-Lock-Core) |
+| **Web dashboard** | [github.com/verita-lock/Soroban-Lock-web](https://github.com/verita-lock/Soroban-Lock-web) |
+| **Contracts** | [github.com/verita-lock/soroban-lock-contracts](https://github.com/verita-lock/soroban-lock-contracts) |
 
 ---
 
-## Why Soroban Guard?
+## Why Soroban Lock?
 
 Soroban is Stellar's smart contract platform — a WebAssembly-based execution environment designed for speed, low cost, and predictability. But like any smart contract platform, **bugs in Soroban contracts can be exploited on-chain and are irreversible**.
 
-Soroban Guard catches common vulnerability classes at the source level, before `stellar contract deploy` ever runs.
+Soroban Lock catches common vulnerability classes at the source level, before `stellar contract deploy` ever runs.
 
 ---
 
@@ -77,7 +77,7 @@ cargo run -p soroban-guard-cli -- scan ./path/to/contract-crate --json
 ## Workspace Scaffold
 
 ```
-Soroban-Guard-Core/
+Soroban-Lock-Core/
 ├── Cargo.toml                  # workspace root
 ├── crates/
 │   ├── cli/                    # clap entrypoint & reporting
@@ -186,7 +186,7 @@ pub fn default_checks() -> Vec<Box<dyn Check + Send + Sync>> {
 
 ## Stellar Deployment Workflow
 
-Integrate Soroban Guard into your Stellar deployment pipeline:
+Integrate Soroban Lock into your Stellar deployment pipeline:
 
 ```bash
 # 1. Analyze before building
@@ -219,7 +219,7 @@ See [docs/checks.md](docs/checks.md) for implemented rules and [CONTRIBUTING.md]
 
 ## Testing
 
-The Soroban Guard analyzer includes comprehensive test coverage for all implemented checks. Tests are embedded in each check module and validate both positive cases (findings detected) and negative cases (findings correctly ignored).
+The Soroban Lock analyzer includes comprehensive test coverage for all implemented checks. Tests are embedded in each check module and validate both positive cases (findings detected) and negative cases (findings correctly ignored).
 
 ### What tests cover
 
