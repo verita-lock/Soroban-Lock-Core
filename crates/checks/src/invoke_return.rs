@@ -48,27 +48,25 @@ struct InvokeVisitor<'a> {
 impl<'a> Visit<'a> for InvokeVisitor<'a> {
     fn visit_stmt(&mut self, i: &'a Stmt) {
         match i {
-            Stmt::Expr(expr, _) => {
-                if let Expr::MethodCall(m) = expr {
-                    if is_invoke_contract_call(m) {
-                        self.out.push(Finding {
-                            check_name: CHECK_NAME.to_string(),
-                            severity: Severity::Low,
-                            file_path: String::new(),
-                            line: m.span().start().line,
-                            function_name: self.fn_name.clone(),
-                            description: "Return value of `env.invoke_contract()` is ignored. \
-                                           The caller cannot detect failure or unexpected results \
-                                           from the callee."
-                                .to_string(),
-                        });
-                    }
+            Stmt::Expr(Expr::MethodCall(m), _) => {
+                if is_invoke_contract_call(m) {
+                    self.out.push(Finding {
+                        check_name: CHECK_NAME.to_string(),
+                        severity: Severity::Low,
+                        file_path: String::new(),
+                        line: m.span().start().line,
+                        function_name: self.fn_name.clone(),
+                        description: "Return value of `env.invoke_contract()` is ignored. \
+                                       The caller cannot detect failure or unexpected results \
+                                       from the callee."
+                            .to_string(),
+                    });
                 }
             }
             Stmt::Local(local) => {
                 if let Pat::Wild(_) = local.pat {
-                    if let Some((_, init)) = &local.init {
-                        if let Expr::MethodCall(m) = &**init {
+                    if let Some(init) = &local.init {
+                        if let Expr::MethodCall(m) = &*init.expr {
                             if is_invoke_contract_call(m) {
                                 self.out.push(Finding {
                                     check_name: CHECK_NAME.to_string(),

@@ -25,7 +25,7 @@ impl Check for EventsNoCacheCheck {
                 calls: Vec::new(),
             };
             visitor.visit_block(&method.block);
-            
+
             if visitor.calls.len() > 3 {
                 out.push(Finding {
                     check_name: CHECK_NAME.to_string(),
@@ -54,7 +54,8 @@ struct EventsCallCounter {
 impl<'a> Visit<'a> for EventsCallCounter {
     fn visit_expr_method_call(&mut self, i: &ExprMethodCall) {
         if is_events_call(i) {
-            self.calls.push((i.method.to_string(), i.span().start().line));
+            self.calls
+                .push((i.method.to_string(), i.span().start().line));
         }
         visit::visit_expr_method_call(self, i);
     }

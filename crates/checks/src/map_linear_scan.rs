@@ -20,7 +20,7 @@ struct MapScanVisitor<'a> {
 
 impl<'ast> Visit<'ast> for MapScanVisitor<'ast> {
     fn visit_expr_for_loop(&mut self, i: &'ast ExprForLoop) {
-        let is_keys_loop = if let Expr::MethodCall(mc) = &*i.iter {
+        let is_keys_loop = if let Expr::MethodCall(mc) = &*i.expr {
             mc.method == "keys"
         } else {
             false

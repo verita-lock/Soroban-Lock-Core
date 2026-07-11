@@ -5,7 +5,6 @@
 //! the contract correctly.
 
 use crate::{Check, Finding, Severity};
-use syn::spanned::Spanned;
 use syn::{Item, ItemImpl, ItemStruct};
 
 const CHECK_NAME: &str = "missing-contract-attr";
@@ -39,22 +38,20 @@ impl Check for MissingContractAttrCheck {
         for item in &file.items {
             if let Item::Struct(item_struct) = item {
                 let struct_name = item_struct.ident.to_string();
-                if contractimpl_structs.contains(&struct_name) {
-                    if !has_contract_attr(item_struct) {
-                        let line = item_struct.ident.span().start().line;
-                        out.push(Finding {
-                            check_name: CHECK_NAME.to_string(),
-                            severity: Severity::Medium,
-                            file_path: String::new(),
-                            line,
-                            function_name: struct_name.clone(),
-                            description: format!(
-                                "Struct `{struct_name}` is used in `#[contractimpl]` but lacks \
+                if contractimpl_structs.contains(&struct_name) && !has_contract_attr(item_struct) {
+                    let line = item_struct.ident.span().start().line;
+                    out.push(Finding {
+                        check_name: CHECK_NAME.to_string(),
+                        severity: Severity::Medium,
+                        file_path: String::new(),
+                        line,
+                        function_name: struct_name.clone(),
+                        description: format!(
+                            "Struct `{struct_name}` is used in `#[contractimpl]` but lacks \
                                  `#[contract]` attribute. The Soroban SDK will not register the \
                                  contract correctly."
-                            ),
-                        });
-                    }
+                        ),
+                    });
                 }
             }
         }
@@ -84,9 +81,7 @@ fn has_contract_attr(item_struct: &ItemStruct) -> bool {
 }
 
 fn path_is_contract(path: &syn::Path) -> bool {
-    path.segments
-        .last()
-        .is_some_and(|s| s.ident == "contract")
+    path.segments.last().is_some_and(|s| s.ident == "contract")
 }
 
 #[cfg(test)]

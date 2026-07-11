@@ -50,7 +50,7 @@ impl Check for MissingContractimplCheck {
             }
             // Check self type matches a #[contract] struct.
             let self_name = impl_self_type_name(&item_impl.self_ty);
-            if !contract_structs.iter().any(|n| *n == self_name) {
+            if !contract_structs.contains(&self_name) {
                 continue;
             }
             // Has at least one pub fn?

@@ -4,7 +4,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Expr, ExprMethodCall, File, Ident, Stmt};
+use syn::{Expr, ExprMethodCall, File, Stmt};
 
 const CHECK_NAME: &str = "auth-untrusted-storage";
 
@@ -53,8 +53,8 @@ impl<'ast> Visit<'ast> for StorageAuthScan {
         if let Stmt::Local(local) = i {
             if let Some(init) = &local.init {
                 if expr_reads_storage(&init.expr) {
-                    if let syn::Pat::Ident(pat_ident) = &local.pat {
-                        self.storage_vars.push(pat_ident.ident.to_string());
+                    if let Some(name) = pat_ident_name(&local.pat) {
+                        self.storage_vars.push(name);
                     }
                 }
             }
@@ -77,6 +77,14 @@ impl<'ast> Visit<'ast> for StorageAuthScan {
     }
 }
 
+fn pat_ident_name(pat: &syn::Pat) -> Option<String> {
+    match pat {
+        syn::Pat::Ident(pat_ident) => Some(pat_ident.ident.to_string()),
+        syn::Pat::Type(pat_type) => pat_ident_name(&pat_type.pat),
+        _ => None,
+    }
+}
+
 fn expr_reads_storage(expr: &Expr) -> bool {
     let mut v = StorageReadScan::default();
     v.visit_expr(expr);
@@ -91,10 +99,10 @@ struct StorageReadScan {
 impl<'ast> Visit<'ast> for StorageReadScan {
     fn visit_expr_method_call(&mut self, i: &'ast ExprMethodCall) {
         let m = i.method.to_string();
-        if matches!(m.as_str(), "get" | "instance" | "persistent" | "temporary") {
-            if receiver_chain_contains_storage(&i.receiver) {
-                self.found = true;
-            }
+        if matches!(m.as_str(), "get" | "instance" | "persistent" | "temporary")
+            && receiver_chain_contains_storage(&i.receiver)
+        {
+            self.found = true;
         }
         visit::visit_expr_method_call(self, i);
     }

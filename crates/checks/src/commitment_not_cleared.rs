@@ -37,7 +37,9 @@ impl Check for CommitmentNotClearedCheck {
                     check_name: CHECK_NAME.to_string(),
                     severity: Severity::High,
                     file_path: String::new(),
-                    line: scan.get_line.unwrap_or_else(|| method.sig.ident.span().start().line),
+                    line: scan
+                        .get_line
+                        .unwrap_or_else(|| method.sig.ident.span().start().line),
                     function_name: fn_name.clone(),
                     description: format!(
                         "Method `{fn_name}` reads a commitment from storage but never removes \
@@ -65,7 +67,7 @@ impl<'ast> Visit<'ast> for BodyScan {
         if receiver_chain_contains_storage(&i.receiver) {
             match method.as_str() {
                 "get" | "get_unchecked" => {
-                    if i.args.iter().any(|a| expr_contains_commit_hint(a)) {
+                    if i.args.iter().any(expr_contains_commit_hint) {
                         self.commitment_get = true;
                         if self.get_line.is_none() {
                             self.get_line = Some(i.span().start().line);
@@ -73,14 +75,15 @@ impl<'ast> Visit<'ast> for BodyScan {
                     }
                 }
                 "remove" => {
-                    if i.args.iter().any(|a| expr_contains_commit_hint(a)) {
+                    if i.args.iter().any(expr_contains_commit_hint) {
                         self.commitment_cleared = true;
                     }
                 }
-                "set" if i.args.len() == 2 => {
-                    if i.args.iter().next().is_some_and(|a| expr_contains_commit_hint(a)) {
-                        self.commitment_cleared = true;
-                    }
+                "set"
+                    if i.args.len() == 2
+                        && i.args.iter().next().is_some_and(expr_contains_commit_hint) =>
+                {
+                    self.commitment_cleared = true;
                 }
                 _ => {}
             }

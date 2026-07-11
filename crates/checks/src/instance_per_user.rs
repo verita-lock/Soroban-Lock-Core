@@ -42,7 +42,9 @@ impl Check for InstancePerUserCheck {
     }
 }
 
-fn extract_address_params(inputs: &syn::punctuated::Punctuated<FnArg, syn::token::Comma>) -> Vec<String> {
+fn extract_address_params(
+    inputs: &syn::punctuated::Punctuated<FnArg, syn::token::Comma>,
+) -> Vec<String> {
     let mut params = Vec::new();
     for arg in inputs {
         if let FnArg::Typed(pat_type) = arg {
@@ -58,9 +60,7 @@ fn extract_address_params(inputs: &syn::punctuated::Punctuated<FnArg, syn::token
 
 fn is_address_type(ty: &syn::Type) -> bool {
     match ty {
-        syn::Type::Path(p) => {
-            p.path.segments.last().is_some_and(|s| s.ident == "Address")
-        }
+        syn::Type::Path(p) => p.path.segments.last().is_some_and(|s| s.ident == "Address"),
         _ => false,
     }
 }
@@ -80,9 +80,11 @@ fn receiver_chain_contains_instance(expr: &Expr) -> bool {
 
 fn key_contains_param(expr: &Expr, params: &[String]) -> bool {
     match expr {
-        Expr::Path(p) => {
-            p.path.segments.last().is_some_and(|s| params.contains(&s.ident.to_string()))
-        }
+        Expr::Path(p) => p
+            .path
+            .segments
+            .last()
+            .is_some_and(|s| params.contains(&s.ident.to_string())),
         Expr::Reference(r) => key_contains_param(&r.expr, params),
         Expr::Tuple(t) => t.elems.iter().any(|e| key_contains_param(e, params)),
         _ => false,

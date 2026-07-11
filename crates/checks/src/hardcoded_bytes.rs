@@ -4,7 +4,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Expr, ExprArray, ExprCall, ExprLit, ExprMethodCall, ExprReference, File, Lit};
+use syn::{Expr, ExprCall, File};
 
 const CHECK_NAME: &str = "hardcoded-bytes";
 
@@ -72,13 +72,14 @@ fn is_hardcoded_bytes_constructor(call: &ExprCall) -> bool {
     if first.ident != "Bytes" {
         return false;
     }
-    matches!(second.ident.to_string().as_str(), "from_slice" | "from_array")
+    matches!(
+        second.ident.to_string().as_str(),
+        "from_slice" | "from_array"
+    )
 }
 
 fn hardcoded_array_len(call: &ExprCall) -> Option<usize> {
-    let Some(arg2) = call.args.iter().nth(1) else {
-        return None;
-    };
+    let arg2 = call.args.iter().nth(1)?;
     let Expr::Reference(reference) = arg2 else {
         return None;
     };

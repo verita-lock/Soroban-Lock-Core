@@ -38,7 +38,8 @@ fn is_stellar_address(s: &str) -> bool {
     if !s.starts_with('G') {
         return false;
     }
-    s.chars().all(|c| c.is_ascii_uppercase() || c.is_ascii_digit())
+    s.chars()
+        .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit())
 }
 
 struct AddressVisitor<'a> {

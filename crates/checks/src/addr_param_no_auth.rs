@@ -121,7 +121,12 @@ impl<'ast> Visit<'ast> for BodyScan {
         // addr.require_auth()
         if method == "require_auth" {
             if let Expr::Path(p) = &*i.receiver {
-                let name = p.path.segments.last().map(|s| s.ident.to_string()).unwrap_or_default();
+                let name = p
+                    .path
+                    .segments
+                    .last()
+                    .map(|s| s.ident.to_string())
+                    .unwrap_or_default();
                 if self.addr_params.contains(&name) && !self.authed_params.contains(&name) {
                     self.authed_params.push(name);
                 }
@@ -130,18 +135,23 @@ impl<'ast> Visit<'ast> for BodyScan {
 
         // env.require_auth_for_address(addr, ...)
         if method == "require_auth_for_address" {
-            if let Some(first_arg) = i.args.first() {
-                if let Expr::Path(p) = first_arg {
-                    let name = p.path.segments.last().map(|s| s.ident.to_string()).unwrap_or_default();
-                    if self.addr_params.contains(&name) && !self.authed_params.contains(&name) {
-                        self.authed_params.push(name);
-                    }
+            if let Some(Expr::Path(p)) = i.args.first() {
+                let name = p
+                    .path
+                    .segments
+                    .last()
+                    .map(|s| s.ident.to_string())
+                    .unwrap_or_default();
+                if self.addr_params.contains(&name) && !self.authed_params.contains(&name) {
+                    self.authed_params.push(name);
                 }
             }
         }
 
         // Storage write
-        if matches!(method.as_str(), "set" | "remove") && receiver_chain_contains_storage(&i.receiver) {
+        if matches!(method.as_str(), "set" | "remove")
+            && receiver_chain_contains_storage(&i.receiver)
+        {
             self.has_storage_write = true;
             if self.write_line.is_none() {
                 self.write_line = Some(i.span().start().line);

@@ -66,8 +66,12 @@ impl<'a> Visit<'_> for SelfInvokeChecker<'a> {
 
 fn is_current_contract_addr(expr: &Expr) -> bool {
     match expr {
+        Expr::Reference(r) => is_current_contract_addr(&r.expr),
         Expr::MethodCall(m) => {
-            if matches!(m.method.to_string().as_str(), "current_contract_address" | "current_contract_id") {
+            if matches!(
+                m.method.to_string().as_str(),
+                "current_contract_address" | "current_contract_id"
+            ) {
                 // Check that the receiver is env
                 if let Expr::Path(p) = &*m.receiver {
                     return p.path.is_ident("env");
@@ -92,8 +96,7 @@ mod tests {
 
     #[test]
     fn flags_invoke_contract_with_current_address() {
-        let hits = run(
-            r#"
+        let hits = run(r#"
 use soroban_sdk::{contract, contractimpl, Env, Symbol};
 
 #[contract]
@@ -109,16 +112,14 @@ impl C {
         );
     }
 }
-"#,
-        );
+"#);
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].severity, Severity::Low);
     }
 
     #[test]
     fn ignores_invoke_contract_with_other_address() {
-        let hits = run(
-            r#"
+        let hits = run(r#"
 use soroban_sdk::{contract, contractimpl, Address, Env, Symbol};
 
 #[contract]
@@ -134,8 +135,7 @@ impl C {
         );
     }
 }
-"#,
-        );
+"#);
         assert_eq!(hits.len(), 0);
     }
 }

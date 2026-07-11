@@ -4,7 +4,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::Visit;
-use syn::{Expr, ExprMethodCall, ExprTuple, File, Lit};
+use syn::{Expr, ExprMethodCall, File, Lit};
 
 const CHECK_NAME: &str = "event-topic-duplicates";
 
@@ -71,7 +71,7 @@ impl<'ast> Visit<'ast> for EventTopicVisitor<'ast> {
     fn visit_expr_method_call(&mut self, i: &'ast ExprMethodCall) {
         if is_events_publish(i) && !i.args.is_empty() {
             let topics_arg = &i.args[0];
-            
+
             // Check if topics is a tuple
             if let Expr::Tuple(tuple) = topics_arg {
                 let mut literals = Vec::new();
@@ -80,7 +80,7 @@ impl<'ast> Visit<'ast> for EventTopicVisitor<'ast> {
                         literals.push((val, elem.span().start().line));
                     }
                 }
-                
+
                 // Check for duplicates
                 for j in 0..literals.len() {
                     for k in (j + 1)..literals.len() {

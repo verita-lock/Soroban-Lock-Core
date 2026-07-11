@@ -5,7 +5,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Expr, ExprMethodCall, File, Pat, Stmt};
+use syn::{Expr, ExprMethodCall, File, Stmt};
 
 const CHECK_NAME: &str = "invoke-result-stored";
 
@@ -43,10 +43,10 @@ impl<'a> Visit<'a> for InvokeResultVisitor<'a> {
     fn visit_stmt(&mut self, i: &'a Stmt) {
         // Detect: let <ident> = env.invoke_contract(...)
         if let Stmt::Local(local) = i {
-            if let Pat::Ident(pat_ident) = &local.pat {
+            if let Some(name) = pat_ident_name(&local.pat) {
                 if let Some(init_expr) = &local.init {
                     if is_invoke_contract_call(&init_expr.expr) {
-                        self.invoke_vars.push(pat_ident.ident.to_string());
+                        self.invoke_vars.push(name);
                     }
                 }
             }
@@ -76,6 +76,14 @@ impl<'a> Visit<'a> for InvokeResultVisitor<'a> {
             }
         }
         visit::visit_expr_method_call(self, i);
+    }
+}
+
+fn pat_ident_name(pat: &syn::Pat) -> Option<String> {
+    match pat {
+        syn::Pat::Ident(pat_ident) => Some(pat_ident.ident.to_string()),
+        syn::Pat::Type(pat_type) => pat_ident_name(&pat_type.pat),
+        _ => None,
     }
 }
 

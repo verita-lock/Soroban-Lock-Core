@@ -9,7 +9,7 @@ use crate::{Check, Finding, Severity};
 use std::collections::HashSet;
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Expr, ExprBinary, ExprMethodCall, File, Ident, Type, BinOp};
+use syn::{BinOp, Expr, ExprBinary, ExprMethodCall, File, Ident, Type};
 
 const CHECK_NAME: &str = "deploy-arbitrary-wasm";
 
@@ -55,9 +55,7 @@ impl<'ast> Visit<'ast> for DeployScan<'_> {
             // The first argument is the wasm hash
             if let Some(wasm_hash_arg) = i.args.first() {
                 if let Some(ident) = extract_ident(wasm_hash_arg) {
-                    if self.bytes_params.contains(&ident)
-                        && !self.safe_params.contains(&ident)
-                    {
+                    if self.bytes_params.contains(ident) && !self.safe_params.contains(ident) {
                         let line = i.span().start().line;
                         self.out.push(Finding {
                             check_name: CHECK_NAME.to_string(),
@@ -83,12 +81,12 @@ impl<'ast> Visit<'ast> for DeployScan<'_> {
         // Equality/inequality comparisons involving a bytes parameter mark it as safe
         if is_comparison_op(&i.op) {
             if let Some(ident) = extract_ident(&i.left) {
-                if self.bytes_params.contains(&ident) {
+                if self.bytes_params.contains(ident) {
                     self.safe_params.insert(ident.clone());
                 }
             }
             if let Some(ident) = extract_ident(&i.right) {
-                if self.bytes_params.contains(&ident) {
+                if self.bytes_params.contains(ident) {
                     self.safe_params.insert(ident.clone());
                 }
             }
@@ -127,7 +125,9 @@ fn extract_ident(expr: &Expr) -> Option<&Ident> {
 }
 
 /// Collect identifiers of parameters whose type is `Bytes` or `BytesN<_>`.
-fn collect_bytes_params(inputs: &syn::punctuated::Punctuated<syn::FnArg, syn::token::Comma>) -> HashSet<Ident> {
+fn collect_bytes_params(
+    inputs: &syn::punctuated::Punctuated<syn::FnArg, syn::token::Comma>,
+) -> HashSet<Ident> {
     let mut set = HashSet::new();
     for input in inputs {
         if let syn::FnArg::Typed(pat_type) = input {
@@ -147,12 +147,11 @@ fn is_bytes_type(ty: &Type) -> bool {
         Type::Path(type_path) => {
             if let Some(segment) = type_path.path.segments.last() {
                 let ident = &segment.ident;
-                ident == "Bytes" || ident == "Byte"
+                ident == "Bytes" || ident == "BytesN"
             } else {
                 false
             }
         }
-        // Could also be `BytesN<...>` – we ignore generic for now.
         _ => false,
     }
 }

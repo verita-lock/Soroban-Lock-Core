@@ -20,7 +20,10 @@ impl Check for TtlHardcodedLowCheck {
         let mut out = Vec::new();
         for method in contractimpl_functions(file) {
             let fn_name = method.sig.ident.to_string();
-            let mut v = TtlLowVisitor { fn_name, out: &mut out };
+            let mut v = TtlLowVisitor {
+                fn_name,
+                out: &mut out,
+            };
             v.visit_block(&method.block);
         }
         out
@@ -29,14 +32,19 @@ impl Check for TtlHardcodedLowCheck {
 
 fn receiver_chain_contains_storage(expr: &Expr) -> bool {
     match expr {
-        Expr::MethodCall(m) => m.method == "storage" || receiver_chain_contains_storage(&m.receiver),
+        Expr::MethodCall(m) => {
+            m.method == "storage" || receiver_chain_contains_storage(&m.receiver)
+        }
         Expr::Field(f) => receiver_chain_contains_storage(&f.base),
         _ => false,
     }
 }
 
 fn extract_int_literal(expr: &Expr) -> Option<u64> {
-    if let Expr::Lit(syn::ExprLit { lit: Lit::Int(i), .. }) = expr {
+    if let Expr::Lit(syn::ExprLit {
+        lit: Lit::Int(i), ..
+    }) = expr
+    {
         i.base10_parse().ok()
     } else {
         None

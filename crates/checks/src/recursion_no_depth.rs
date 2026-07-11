@@ -21,7 +21,7 @@ impl Check for RecursionNoDepthCheck {
 
         for method in contractimpl_functions(file) {
             let fn_name = method.sig.ident.to_string();
-            
+
             // Check if function has a depth parameter
             let has_depth_param = method.sig.inputs.iter().any(|arg| {
                 if let FnArg::Typed(pat_type) = arg {
@@ -62,11 +62,15 @@ impl<'a> Visit<'_> for RecursionVisitor<'a> {
                 ident.to_string()
             } else if p.path.segments.len() == 2 {
                 // Handle Self::function_name
-                p.path.segments.last().map(|s| s.ident.to_string()).unwrap_or_default()
+                p.path
+                    .segments
+                    .last()
+                    .map(|s| s.ident.to_string())
+                    .unwrap_or_default()
             } else {
                 String::new()
             };
-            
+
             // Only flag if it's a recursive call and no depth parameter
             if called_fn == self.fn_name && !self.has_depth_param {
                 self.out.push(Finding {

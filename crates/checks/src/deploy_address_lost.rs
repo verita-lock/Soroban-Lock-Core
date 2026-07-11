@@ -8,7 +8,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Expr, ExprMethodCall, File, Local, Stmt};
+use syn::{Expr, ExprMethodCall, File, Stmt};
 
 const CHECK_NAME: &str = "deploy-address-lost";
 

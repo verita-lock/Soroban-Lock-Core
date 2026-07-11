@@ -4,7 +4,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Block, Expr, ExprMethodCall, File, Stmt};
+use syn::{Expr, ExprMethodCall, File};
 
 const CHECK_NAME: &str = "remove-without-has";
 
@@ -21,11 +21,29 @@ impl Check for RemoveWithoutHasCheck {
         let mut out = Vec::new();
         for method in contractimpl_functions(file) {
             let fn_name = method.sig.ident.to_string();
-            let mut v = RemoveVisitor {
-                fn_name: fn_name.clone(),
-                out: &mut out,
+            let mut has_keys = Vec::new();
+            let mut remove_calls = Vec::new();
+            let mut collector = CallCollector {
+                has_keys: &mut has_keys,
+                remove_calls: &mut remove_calls,
             };
-            v.visit_block(&method.block);
+            collector.visit_block(&method.block);
+
+            for (remove_call, line) in remove_calls {
+                if !has_keys.contains(&remove_call) {
+                    out.push(Finding {
+                        check_name: CHECK_NAME.to_string(),
+                        severity: Severity::Low,
+                        file_path: String::new(),
+                        line,
+                        function_name: fn_name.clone(),
+                        description: "storage.remove() called without a preceding has() guard. \
+                                       Removing a non-existent key is a no-op, which may indicate \
+                                       a logic error."
+                            .to_string(),
+                    });
+                }
+            }
         }
         out
     }
@@ -57,47 +75,8 @@ fn extract_key_from_call(m: &ExprMethodCall) -> Option<String> {
         return None;
     }
     // Simple heuristic: convert first arg to string representation
-    Some(format!("{:?}", m.args[0]))
-}
-
-struct RemoveVisitor<'a> {
-    fn_name: String,
-    out: &'a mut Vec<Finding>,
-}
-
-impl<'a> Visit<'a> for RemoveVisitor<'a> {
-    fn visit_block(&mut self, i: &'a Block) {
-        let mut has_keys = Vec::new();
-        let mut remove_calls = Vec::new();
-
-        // First pass: collect all has() and remove() calls
-        for stmt in &i.stmts {
-            let mut collector = CallCollector {
-                has_keys: &mut has_keys,
-                remove_calls: &mut remove_calls,
-            };
-            collector.visit_stmt(stmt);
-        }
-
-        // Check each remove() call against has() calls
-        for (remove_call, line) in remove_calls {
-            if !has_keys.contains(&remove_call) {
-                self.out.push(Finding {
-                    check_name: CHECK_NAME.to_string(),
-                    severity: Severity::Low,
-                    file_path: String::new(),
-                    line,
-                    function_name: self.fn_name.clone(),
-                    description: "storage.remove() called without a preceding has() guard. \
-                                   Removing a non-existent key is a no-op, which may indicate \
-                                   a logic error."
-                        .to_string(),
-                });
-            }
-        }
-
-        visit::visit_block(self, i);
-    }
+    let arg = &m.args[0];
+    Some(quote::quote!(#arg).to_string())
 }
 
 struct CallCollector<'a> {

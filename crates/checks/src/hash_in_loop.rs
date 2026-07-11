@@ -22,7 +22,11 @@ impl Check for HashInLoopCheck {
         let mut out = Vec::new();
         for method in contractimpl_functions(file) {
             let fn_name = method.sig.ident.to_string();
-            let mut visitor = LoopVisitor { fn_name, loop_depth: 0, out: &mut out };
+            let mut visitor = LoopVisitor {
+                fn_name,
+                loop_depth: 0,
+                out: &mut out,
+            };
             visitor.visit_block(&method.block);
         }
         out

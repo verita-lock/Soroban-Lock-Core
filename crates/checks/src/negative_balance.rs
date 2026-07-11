@@ -51,7 +51,13 @@ fn is_storage_set_call(m: &ExprMethodCall) -> bool {
 
 fn expr_to_string(expr: &Expr) -> String {
     match expr {
-        Expr::Path(p) => p.path.segments.iter().map(|s| s.ident.to_string()).collect::<Vec<_>>().join("::"),
+        Expr::Path(p) => p
+            .path
+            .segments
+            .iter()
+            .map(|s| s.ident.to_string())
+            .collect::<Vec<_>>()
+            .join("::"),
         Expr::Field(f) => {
             let member_str = match &f.member {
                 syn::Member::Named(ident) => ident.to_string(),
@@ -62,8 +68,6 @@ fn expr_to_string(expr: &Expr) -> String {
         _ => String::new(),
     }
 }
-
-
 
 struct SubtractionVisitor<'a> {
     fn_name: String,
@@ -81,18 +85,14 @@ impl<'ast> Visit<'ast> for SubtractionVisitor<'ast> {
 
         // Check each statement for storage set calls with subtraction
         for stmt in &i.stmts {
-            let mut set_finder = SetWithSubFinder {
-                subs: Vec::new(),
-            };
+            let mut set_finder = SetWithSubFinder { subs: Vec::new() };
             set_finder.visit_stmt(stmt);
 
-            for (sub_expr, line) in set_finder.subs {
-                let left_str = expr_to_string(&sub_expr.left);
-                let right_str = expr_to_string(&sub_expr.right);
-                
+            for (left_str, right_str, line) in set_finder.subs {
                 // Check if there's a matching comparison anywhere in the function
-                let has_guard = !left_str.is_empty() && !right_str.is_empty() && 
-                    comp_finder.comparisons.iter().any(|(l, r)| {
+                let has_guard = !left_str.is_empty()
+                    && !right_str.is_empty()
+                    && comp_finder.comparisons.iter().any(|(l, r)| {
                         (l == &left_str && r == &right_str) || (l == &right_str && r == &left_str)
                     });
 
@@ -136,7 +136,7 @@ impl<'ast> Visit<'ast> for AllComparisonsFinder {
 }
 
 struct SetWithSubFinder {
-    subs: Vec<(&'static ExprBinary, usize)>,
+    subs: Vec<(String, String, usize)>,
 }
 
 impl<'ast> Visit<'ast> for SetWithSubFinder {
@@ -144,16 +144,9 @@ impl<'ast> Visit<'ast> for SetWithSubFinder {
         if is_storage_set_call(i) {
             // Check if any argument is a subtraction
             for arg in &i.args {
-                let mut sub_finder = SubFinder {
-                    subs: Vec::new(),
-                };
+                let mut sub_finder = SubFinder { subs: Vec::new() };
                 sub_finder.visit_expr(arg);
-                for (sub_expr, line) in sub_finder.subs {
-                    // SAFETY: We're storing a reference to an expression from the AST.
-                    // This is safe because the AST is owned by the File and lives for the
-                    // duration of the check.
-                    self.subs.push((unsafe { std::mem::transmute(sub_expr) }, line));
-                }
+                self.subs.extend(sub_finder.subs);
             }
         }
         visit::visit_expr_method_call(self, i);
@@ -161,15 +154,15 @@ impl<'ast> Visit<'ast> for SetWithSubFinder {
 }
 
 struct SubFinder {
-    subs: Vec<(&'static ExprBinary, usize)>,
+    subs: Vec<(String, String, usize)>,
 }
 
 impl<'ast> Visit<'ast> for SubFinder {
     fn visit_expr_binary(&mut self, i: &'ast ExprBinary) {
         if matches!(i.op, BinOp::Sub(_)) {
             let line = i.span().start().line;
-            // SAFETY: Same as above
-            self.subs.push((unsafe { std::mem::transmute(i) }, line));
+            self.subs
+                .push((expr_to_string(&i.left), expr_to_string(&i.right), line));
         }
         visit::visit_expr_binary(self, i);
     }

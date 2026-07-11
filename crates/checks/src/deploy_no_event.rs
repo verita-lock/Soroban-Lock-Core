@@ -8,7 +8,7 @@ use syn::{ExprMethodCall, File};
 
 const CHECK_NAME: &str = "deploy-no-event";
 
-/// Flags `env.deployer().deploy(...)` calls where no `env.events().publish(...)` 
+/// Flags `env.deployer().deploy(...)` calls where no `env.events().publish(...)`
 /// is emitted in the same function body. This makes the deployment invisible to
 /// off-chain indexers.
 pub struct DeployNoEventCheck;
@@ -22,16 +22,18 @@ impl Check for DeployNoEventCheck {
         let mut out = Vec::new();
         for method in contractimpl_functions(file) {
             // Scan the function body for deploy and event calls
-            let mut checker = DeployEventChecker { 
+            let mut checker = DeployEventChecker {
                 has_deploy: false,
                 deploy_line: None,
                 has_event: false,
             };
             checker.visit_block(&method.block);
-            
+
             // If deploy exists but no event emitted, report it
             if checker.has_deploy && !checker.has_event {
-                let line = checker.deploy_line.unwrap_or_else(|| method.sig.span().start().line);
+                let line = checker
+                    .deploy_line
+                    .unwrap_or_else(|| method.sig.span().start().line);
                 let fn_name = method.sig.ident.to_string();
                 out.push(Finding {
                     check_name: CHECK_NAME.to_string(),
@@ -112,8 +114,7 @@ mod tests {
 
     #[test]
     fn flags_deploy_without_event() {
-        let hits = run(
-            r#"
+        let hits = run(r#"
 use soroban_sdk::{contract, contractimpl, Bytes, Env};
 
 #[contract]
@@ -125,16 +126,14 @@ impl C {
         let addr = env.deployer().deploy(wasm_hash, ());
     }
 }
-"#,
-        );
+"#);
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].severity, Severity::Low);
     }
 
     #[test]
     fn ignores_deploy_with_event() {
-        let hits = run(
-            r#"
+        let hits = run(r#"
 use soroban_sdk::{contract, contractimpl, Bytes, Env, Symbol};
 
 #[contract]
@@ -147,8 +146,7 @@ impl C {
         env.events().publish((Symbol::new(&env, "deployed"),), addr);
     }
 }
-"#,
-        );
+"#);
         assert_eq!(hits.len(), 0);
     }
 }

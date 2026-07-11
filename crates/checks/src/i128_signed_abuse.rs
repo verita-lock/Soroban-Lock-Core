@@ -68,11 +68,9 @@ mod tests {
 
     #[test]
     fn flags_i128_balance() {
-        let hits = run(
-            r#"pub struct C; #[contractimpl] impl C {
+        let hits = run(r#"pub struct C; #[contractimpl] impl C {
                 pub fn deposit(env: Env, balance: i128) { let _ = (env, balance); }
-            }"#,
-        );
+            }"#);
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].severity, Severity::Low);
         assert!(hits[0].description.contains("balance"));
@@ -80,31 +78,25 @@ mod tests {
 
     #[test]
     fn flags_multiple_names() {
-        let hits = run(
-            r#"pub struct C; #[contractimpl] impl C {
+        let hits = run(r#"pub struct C; #[contractimpl] impl C {
                 pub fn f(env: Env, total: i128, supply: i128, cap: i128) { let _ = (env, total, supply, cap); }
-            }"#,
-        );
+            }"#);
         assert_eq!(hits.len(), 3);
     }
 
     #[test]
     fn passes_u128_balance() {
-        let hits = run(
-            r#"pub struct C; #[contractimpl] impl C {
+        let hits = run(r#"pub struct C; #[contractimpl] impl C {
                 pub fn deposit(env: Env, balance: u128) { let _ = (env, balance); }
-            }"#,
-        );
+            }"#);
         assert!(hits.is_empty());
     }
 
     #[test]
     fn passes_i128_unrelated_name() {
-        let hits = run(
-            r#"pub struct C; #[contractimpl] impl C {
+        let hits = run(r#"pub struct C; #[contractimpl] impl C {
                 pub fn set_fee(env: Env, fee: i128) { let _ = (env, fee); }
-            }"#,
-        );
+            }"#);
         assert!(hits.is_empty());
     }
 }

@@ -4,11 +4,11 @@
 //! there's a potential race condition where the key could be removed between the two calls.
 //! This check detects such patterns and suggests using `get()` directly instead.
 
-use crate::util::{contractimpl_functions, is_contractimpl};
+use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Expr, ExprMethodCall, File, Lit, LitStr, Pat, Stmt};
+use syn::{Expr, ExprMethodCall, File};
 
 const CHECK_NAME: &str = "storage-has-get-race";
 
@@ -23,7 +23,7 @@ impl Check for StorageHasGetRaceCheck {
 
     fn run(&self, file: &File, _source: &str) -> Vec<Finding> {
         let mut out = Vec::new();
-        
+
         for method in contractimpl_functions(file) {
             let fn_name = method.sig.ident.to_string();
             let mut v = HasGetRaceVisitor {
@@ -31,7 +31,7 @@ impl Check for StorageHasGetRaceCheck {
                 get_calls: Vec::new(),
             };
             v.visit_block(&method.block);
-            
+
             // Check for race conditions: has call followed by get call on same key
             for has_call in &v.has_calls {
                 for get_call in &v.get_calls {
@@ -49,7 +49,7 @@ impl Check for StorageHasGetRaceCheck {
                 }
             }
         }
-        
+
         out
     }
 }
@@ -67,49 +67,56 @@ struct HasGetRaceVisitor {
 
 impl<'a> Visit<'a> for HasGetRaceVisitor {
     fn visit_expr_method_call(&mut self, i: &'a ExprMethodCall) {
-        // Look for storage has calls
-        if i.method == "has" {
-            if let Expr::MethodCall(mc) = &*i.receiver {
-                if mc.method == "storage" {
-                    // Try to extract the key
-                    if let Some(arg) = i.args.first() {
-                        if let Expr::Reference(ref_ref) = arg {
-                            if let Expr::Lit(lit) = &**ref_ref.expr {
-                                if let Lit::Str(s) = &lit.lit {
-                                    self.has_calls.push(StorageCall {
-                                        key: s.value(),
-                                        line: i.span().start().line,
-                                    });
-                                }
-                            }
-                        }
-                    }
+        if i.method == "has" && receiver_chain_contains_storage(&i.receiver) {
+            if let Some(arg) = i.args.first() {
+                if let Some(key) = key_repr(arg) {
+                    self.has_calls.push(StorageCall {
+                        key,
+                        line: i.span().start().line,
+                    });
                 }
             }
         }
-        
-        // Look for storage get calls
-        if i.method == "get" {
-            if let Expr::MethodCall(mc) = &*i.receiver {
-                if mc.method == "storage" {
-                    // Try to extract the key
-                    if let Some(arg) = i.args.first() {
-                        if let Expr::Reference(ref_ref) = arg {
-                            if let Expr::Lit(lit) = &**ref_ref.expr {
-                                if let Lit::Str(s) = &lit.lit {
-                                    self.get_calls.push(StorageCall {
-                                        key: s.value(),
-                                        line: i.span().start().line,
-                                    });
-                                }
-                            }
-                        }
-                    }
+
+        if i.method == "get" && receiver_chain_contains_storage(&i.receiver) {
+            if let Some(arg) = i.args.first() {
+                if let Some(key) = key_repr(arg) {
+                    self.get_calls.push(StorageCall {
+                        key,
+                        line: i.span().start().line,
+                    });
                 }
             }
         }
-        
+
         visit::visit_expr_method_call(self, i);
+    }
+}
+
+fn receiver_chain_contains_storage(expr: &Expr) -> bool {
+    match expr {
+        Expr::MethodCall(m) => {
+            if m.method == "storage" {
+                return true;
+            }
+            receiver_chain_contains_storage(&m.receiver)
+        }
+        Expr::Field(f) => receiver_chain_contains_storage(&f.base),
+        _ => false,
+    }
+}
+
+/// Extract a simple string representation of an expression used as a storage key.
+fn key_repr(expr: &Expr) -> Option<String> {
+    match expr {
+        Expr::Reference(r) => key_repr(&r.expr),
+        Expr::Path(p) => Some(p.path.segments.last()?.ident.to_string()),
+        Expr::Lit(syn::ExprLit {
+            lit: syn::Lit::Str(s),
+            ..
+        }) => Some(s.value()),
+        Expr::Macro(m) => Some(quote::quote!(#m).to_string()),
+        _ => None,
     }
 }
 

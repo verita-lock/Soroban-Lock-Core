@@ -4,7 +4,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Expr, ExprMethodCall, File, Stmt};
+use syn::{Expr, File, Stmt};
 
 const CHECK_NAME: &str = "ed25519-unchecked";
 
@@ -37,8 +37,7 @@ struct StmtVisitor<'a> {
 impl<'a> Visit<'_> for StmtVisitor<'a> {
     fn visit_stmt(&mut self, stmt: &Stmt) {
         if let Some(expr) = match stmt {
-            Stmt::Semi(expr, _) => Some(expr),
-            Stmt::Expr(expr) => Some(expr),
+            Stmt::Expr(expr, _) => Some(expr),
             _ => None,
         } {
             if is_unchecked_ed25519_verify(expr) {

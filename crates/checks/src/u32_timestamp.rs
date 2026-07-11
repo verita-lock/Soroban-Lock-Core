@@ -67,11 +67,9 @@ mod tests {
 
     #[test]
     fn flags_u32_timestamp() {
-        let hits = run(
-            r#"pub struct C; #[contractimpl] impl C {
+        let hits = run(r#"pub struct C; #[contractimpl] impl C {
                 pub fn set_expiry(env: Env, timestamp: u32) { let _ = (env, timestamp); }
-            }"#,
-        );
+            }"#);
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].severity, Severity::Medium);
         assert!(hits[0].description.contains("timestamp"));
@@ -79,41 +77,33 @@ mod tests {
 
     #[test]
     fn flags_u32_deadline_and_expiry() {
-        let hits = run(
-            r#"pub struct C; #[contractimpl] impl C {
+        let hits = run(r#"pub struct C; #[contractimpl] impl C {
                 pub fn lock(env: Env, deadline: u32, expiry: u32) { let _ = (env, deadline, expiry); }
-            }"#,
-        );
+            }"#);
         assert_eq!(hits.len(), 2);
     }
 
     #[test]
     fn passes_u64_timestamp() {
-        let hits = run(
-            r#"pub struct C; #[contractimpl] impl C {
+        let hits = run(r#"pub struct C; #[contractimpl] impl C {
                 pub fn set_expiry(env: Env, timestamp: u64) { let _ = (env, timestamp); }
-            }"#,
-        );
+            }"#);
         assert!(hits.is_empty());
     }
 
     #[test]
     fn passes_u32_unrelated_name() {
-        let hits = run(
-            r#"pub struct C; #[contractimpl] impl C {
+        let hits = run(r#"pub struct C; #[contractimpl] impl C {
                 pub fn set_count(env: Env, count: u32) { let _ = (env, count); }
-            }"#,
-        );
+            }"#);
         assert!(hits.is_empty());
     }
 
     #[test]
     fn flags_u32_time_and_expiration() {
-        let hits = run(
-            r#"pub struct C; #[contractimpl] impl C {
+        let hits = run(r#"pub struct C; #[contractimpl] impl C {
                 pub fn schedule(env: Env, time: u32, expiration: u32) { let _ = (env, time, expiration); }
-            }"#,
-        );
+            }"#);
         assert_eq!(hits.len(), 2);
     }
 }

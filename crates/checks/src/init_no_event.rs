@@ -32,13 +32,13 @@ impl Check for InitNoEventCheck {
             }
 
             // Check if function is public
-            if !method.sig.vis.is_pub() {
+            if !matches!(method.vis, syn::Visibility::Public(_)) {
                 continue;
             }
 
             let mut scan = FuncBodyScan::default();
             scan.visit_block(&method.block);
-            
+
             if scan.storage_write && !scan.events_publish {
                 let line = first_storage_write_line(&method.block)
                     .unwrap_or_else(|| method.sig.ident.span().start().line);
@@ -323,4 +323,3 @@ impl Contract {
         Ok(())
     }
 }
-</content>

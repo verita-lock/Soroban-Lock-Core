@@ -49,7 +49,9 @@ impl Check for UnauthAddressTupleCheck {
                     check_name: CHECK_NAME.to_string(),
                     severity: Severity::High,
                     file_path: String::new(),
-                    line: scan.set_line.unwrap_or_else(|| method.sig.ident.span().start().line),
+                    line: scan
+                        .set_line
+                        .unwrap_or_else(|| method.sig.ident.span().start().line),
                     function_name: fn_name.clone(),
                     description: format!(
                         "Method `{fn_name}` stores a tuple containing Address parameters \
@@ -97,7 +99,12 @@ impl<'ast> Visit<'ast> for BodyScan {
         // Detect require_auth on any Address parameter.
         if i.method == "require_auth" {
             if let syn::Expr::Path(p) = &*i.receiver {
-                let name = p.path.segments.last().map(|s| s.ident.to_string()).unwrap_or_default();
+                let name = p
+                    .path
+                    .segments
+                    .last()
+                    .map(|s| s.ident.to_string())
+                    .unwrap_or_default();
                 if self.addr_params.contains(&name) {
                     self.has_require_auth = true;
                 }
@@ -105,14 +112,12 @@ impl<'ast> Visit<'ast> for BodyScan {
         }
 
         // Detect storage().*.set(key, tuple_with_address_param)
-        if i.method == "set" && i.args.len() == 2 {
-            if receiver_chain_contains_storage(&i.receiver) {
-                let value_arg = i.args.iter().nth(1).unwrap();
-                if self.expr_is_tuple_with_addr_param(value_arg) {
-                    self.tuple_set = true;
-                    if self.set_line.is_none() {
-                        self.set_line = Some(i.span().start().line);
-                    }
+        if i.method == "set" && i.args.len() == 2 && receiver_chain_contains_storage(&i.receiver) {
+            let value_arg = i.args.iter().nth(1).unwrap();
+            if self.expr_is_tuple_with_addr_param(value_arg) {
+                self.tuple_set = true;
+                if self.set_line.is_none() {
+                    self.set_line = Some(i.span().start().line);
                 }
             }
         }
@@ -123,14 +128,25 @@ impl<'ast> Visit<'ast> for BodyScan {
 
 impl BodyScan {
     fn expr_is_tuple_with_addr_param(&self, expr: &syn::Expr) -> bool {
-        let syn::Expr::Tuple(t) = expr else { return false };
+        let expr = match expr {
+            syn::Expr::Reference(r) => &*r.expr,
+            other => other,
+        };
+        let syn::Expr::Tuple(t) = expr else {
+            return false;
+        };
         t.elems.iter().any(|e| self.expr_references_addr_param(e))
     }
 
     fn expr_references_addr_param(&self, expr: &syn::Expr) -> bool {
         match expr {
             syn::Expr::Path(p) => {
-                let name = p.path.segments.last().map(|s| s.ident.to_string()).unwrap_or_default();
+                let name = p
+                    .path
+                    .segments
+                    .last()
+                    .map(|s| s.ident.to_string())
+                    .unwrap_or_default();
                 self.addr_params.contains(&name)
             }
             syn::Expr::Reference(r) => self.expr_references_addr_param(&r.expr),

@@ -4,7 +4,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Block, Expr, ExprIf, ExprMatch, ExprMethodCall, File, Stmt};
+use syn::{Block, Expr, ExprIf, ExprMatch, ExprMethodCall, File};
 
 const CHECK_NAME: &str = "auth-in-branch";
 
@@ -69,9 +69,9 @@ impl<'ast> Visit<'ast> for BranchAuthScan {
         if i.arms.is_empty() {
             return;
         }
-        let first_has_auth = block_has_auth(&i.arms[0].body);
+        let first_has_auth = expr_has_auth(&i.arms[0].body);
         for arm in &i.arms {
-            let arm_has_auth = block_has_auth(&arm.body);
+            let arm_has_auth = expr_has_auth(&arm.body);
             if arm_has_auth != first_has_auth {
                 self.incomplete_branch = true;
                 break;

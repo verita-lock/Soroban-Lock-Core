@@ -27,24 +27,23 @@ impl Check for AmountTypeCheck {
                         if matches!(
                             param_name.as_str(),
                             "amount" | "balance" | "value" | "quantity"
-                        ) {
-                            if is_u64_or_u32_type(ty) {
-                                let line = arg.span().start().line;
-                                out.push(Finding {
-                                    check_name: CHECK_NAME.to_string(),
-                                    severity: Severity::Medium,
-                                    file_path: String::new(),
-                                    line,
-                                    function_name: fn_name.clone(),
-                                    description: format!(
-                                        "Parameter `{}` in `{}` is `u64` or `u32`, but the \
+                        ) && is_u64_or_u32_type(ty)
+                        {
+                            let line = arg.span().start().line;
+                            out.push(Finding {
+                                check_name: CHECK_NAME.to_string(),
+                                severity: Severity::Medium,
+                                file_path: String::new(),
+                                line,
+                                function_name: fn_name.clone(),
+                                description: format!(
+                                    "Parameter `{}` in `{}` is `u64` or `u32`, but the \
                                          Soroban token interface uses `i128` for amounts. Using \
                                          the wrong type silently truncates values and is \
                                          incompatible with the standard token interface.",
-                                        param_name, fn_name
-                                    ),
-                                });
-                            }
+                                    param_name, fn_name
+                                ),
+                            });
                         }
                     }
                 }

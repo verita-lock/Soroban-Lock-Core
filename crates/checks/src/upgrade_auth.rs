@@ -4,7 +4,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{ExprMethodCall, File, Stmt, Visibility};
+use syn::{ExprMethodCall, File, Visibility};
 
 const CHECK_NAME: &str = "upgrade-missing-auth";
 

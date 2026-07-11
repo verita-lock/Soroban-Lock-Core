@@ -56,17 +56,14 @@ impl<'a> Visit<'_> for SymbolShortVisitor<'a> {
 }
 
 fn extract_string_len_from_macro(tokens: &proc_macro2::TokenStream) -> Option<usize> {
-    let mut iter = tokens.clone().into_iter();
-    while let Some(token) = iter.next() {
-        match token {
-            proc_macro2::TokenTree::Literal(lit) => {
-                let lit_str = lit.to_string();
-                if lit_str.starts_with('"') && lit_str.ends_with('"') {
-                    let content = &lit_str[1..lit_str.len() - 1];
-                    return Some(content.len());
-                }
+    let iter = tokens.clone().into_iter();
+    for token in iter {
+        if let proc_macro2::TokenTree::Literal(lit) = token {
+            let lit_str = lit.to_string();
+            if lit_str.starts_with('"') && lit_str.ends_with('"') {
+                let content = &lit_str[1..lit_str.len() - 1];
+                return Some(content.len());
             }
-            _ => {}
         }
     }
     None

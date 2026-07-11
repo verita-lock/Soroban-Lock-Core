@@ -5,7 +5,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Block, ExprMethodCall, File, FnArg, Pat, Type};
+use syn::{Block, ExprMethodCall, File, FnArg, Type};
 
 const CHECK_NAME: &str = "init-admin-no-auth";
 
@@ -63,11 +63,7 @@ fn has_address_param(inputs: &syn::punctuated::Punctuated<FnArg, syn::token::Com
 
 fn type_is_address(ty: &Type) -> bool {
     match ty {
-        Type::Path(p) => p
-            .path
-            .segments
-            .last()
-            .is_some_and(|s| s.ident == "Address"),
+        Type::Path(p) => p.path.segments.last().is_some_and(|s| s.ident == "Address"),
         _ => false,
     }
 }
@@ -111,17 +107,12 @@ impl<'ast> Visit<'ast> for StorageSetScan {
         if i.method == "set" {
             // Check receiver chain contains storage()
             let mut cur = &*i.receiver;
-            loop {
-                match cur {
-                    syn::Expr::MethodCall(m) => {
-                        if m.method == "storage" {
-                            self.found = true;
-                            break;
-                        }
-                        cur = &m.receiver;
-                    }
-                    _ => break,
+            while let syn::Expr::MethodCall(m) = cur {
+                if m.method == "storage" {
+                    self.found = true;
+                    break;
                 }
+                cur = &m.receiver;
             }
         }
         visit::visit_expr_method_call(self, i);

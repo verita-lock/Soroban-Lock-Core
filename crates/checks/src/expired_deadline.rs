@@ -8,7 +8,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{BinOp, Expr, ExprBinary, ExprMethodCall, File, FnArg, Pat, Stmt};
+use syn::{BinOp, Expr, ExprBinary, ExprMethodCall, File, FnArg, Pat};
 
 const CHECK_NAME: &str = "expired-deadline";
 
@@ -18,7 +18,9 @@ fn is_deadline_param(name: &str) -> bool {
     DEADLINE_PARAM_NAMES.contains(&name)
 }
 
-fn collect_deadline_params(inputs: &syn::punctuated::Punctuated<FnArg, syn::token::Comma>) -> Vec<String> {
+fn collect_deadline_params(
+    inputs: &syn::punctuated::Punctuated<FnArg, syn::token::Comma>,
+) -> Vec<String> {
     let mut params = Vec::new();
     for input in inputs {
         if let FnArg::Typed(pt) = input {
@@ -108,7 +110,12 @@ struct DeadlineVisitor<'a> {
 
 impl<'a> DeadlineVisitor<'a> {
     fn check_macro_for_timestamp(&mut self, mac: &syn::Macro) {
-        let mac_name = mac.path.segments.last().map(|s| s.ident.to_string()).unwrap_or_default();
+        let mac_name = mac
+            .path
+            .segments
+            .last()
+            .map(|s| s.ident.to_string())
+            .unwrap_or_default();
         if matches!(mac_name.as_str(), "assert" | "require") {
             if let Ok(expr) = mac.parse_body::<Expr>() {
                 let mut inner = TimestampCompFinder {
@@ -143,27 +150,28 @@ impl<'ast> Visit<'ast> for DeadlineVisitor<'ast> {
     }
 
     fn visit_expr_method_call(&mut self, i: &'ast ExprMethodCall) {
-        if i.method == "set" && receiver_chain_contains_storage(&i.receiver) {
-            if !self.timestamp_checked {
-                // Check if any deadline param is being stored
-                for arg in &i.args {
-                    if expr_references_param(arg, &self.deadline_params) {
-                        self.out.push(Finding {
-                            check_name: CHECK_NAME.to_string(),
-                            severity: Severity::Medium,
-                            file_path: String::new(),
-                            line: i.span().start().line,
-                            function_name: self.fn_name.clone(),
-                            description: format!(
-                                "Method `{}` stores a deadline/expiry parameter to storage without \
+        if i.method == "set"
+            && receiver_chain_contains_storage(&i.receiver)
+            && !self.timestamp_checked
+        {
+            // Check if any deadline param is being stored
+            for arg in &i.args {
+                if expr_references_param(arg, &self.deadline_params) {
+                    self.out.push(Finding {
+                        check_name: CHECK_NAME.to_string(),
+                        severity: Severity::Medium,
+                        file_path: String::new(),
+                        line: i.span().start().line,
+                        function_name: self.fn_name.clone(),
+                        description: format!(
+                            "Method `{}` stores a deadline/expiry parameter to storage without \
                                  first checking it against `env.ledger().timestamp()`. Callers can \
                                  set already-expired deadlines, bypassing time-lock logic. \
                                  Add a guard: `require!(expiry > env.ledger().timestamp())`.",
-                                self.fn_name
-                            ),
-                        });
-                        break;
-                    }
+                            self.fn_name
+                        ),
+                    });
+                    break;
                 }
             }
         }

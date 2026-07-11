@@ -31,12 +31,14 @@ impl Check for UnauthStorageRemoveCheck {
             }
 
             let stmts = &method.block.stmts;
+            let var_map = local_var_idents(stmts);
 
             for (idx, stmt) in stmts.iter().enumerate() {
                 // Find a storage remove call in this statement.
                 let Some((remove_line, key_idents)) = storage_remove_info(stmt) else {
                     continue;
                 };
+                let key_idents = resolve_idents(&key_idents, &var_map);
 
                 // Check if any key ident is an Address param.
                 let addr_param = addr_params
@@ -47,9 +49,9 @@ impl Check for UnauthStorageRemoveCheck {
                 };
 
                 // Check whether require_auth on this param (or env) precedes this stmt.
-                let guarded = stmts[..idx].iter().any(|s| {
-                    stmt_has_require_auth(s, addr_param) || stmt_has_env_require_auth(s)
-                });
+                let guarded = stmts[..idx]
+                    .iter()
+                    .any(|s| stmt_has_require_auth(s, addr_param) || stmt_has_env_require_auth(s));
 
                 if !guarded {
                     out.push(Finding {
@@ -78,9 +80,7 @@ impl Check for UnauthStorageRemoveCheck {
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 /// Collect names of parameters whose type is `Address` (or `soroban_sdk::Address`).
-fn address_params(
-    inputs: &syn::punctuated::Punctuated<FnArg, syn::token::Comma>,
-) -> Vec<String> {
+fn address_params(inputs: &syn::punctuated::Punctuated<FnArg, syn::token::Comma>) -> Vec<String> {
     inputs
         .iter()
         .filter_map(|arg| {
@@ -156,6 +156,52 @@ fn collect_idents_from_expr(expr: &Expr) -> Vec<String> {
         Expr::Call(c) => c.args.iter().flat_map(collect_idents_from_expr).collect(),
         _ => vec![],
     }
+}
+
+/// Map local `let` bindings to the identifiers referenced in their initializer,
+/// so a key variable like `let key = (tag, owner.clone())` can be traced back to
+/// the `owner` parameter it carries.
+fn local_var_idents(stmts: &[Stmt]) -> std::collections::HashMap<String, Vec<String>> {
+    let mut map = std::collections::HashMap::new();
+    for stmt in stmts {
+        if let Stmt::Local(local) = stmt {
+            if let Some(init) = &local.init {
+                if let Some(name) = pat_ident_name(&local.pat) {
+                    map.insert(name, collect_idents_from_expr(&init.expr));
+                }
+            }
+        }
+    }
+    map
+}
+
+fn pat_ident_name(pat: &Pat) -> Option<String> {
+    match pat {
+        Pat::Ident(pat_ident) => Some(pat_ident.ident.to_string()),
+        Pat::Type(pat_type) => pat_ident_name(&pat_type.pat),
+        _ => None,
+    }
+}
+
+/// Expand identifiers that are themselves local variable names into the
+/// identifiers referenced by their initializer, transitively.
+fn resolve_idents(
+    idents: &[String],
+    var_map: &std::collections::HashMap<String, Vec<String>>,
+) -> Vec<String> {
+    let mut result = Vec::new();
+    let mut stack: Vec<String> = idents.to_vec();
+    let mut visited = std::collections::HashSet::new();
+    while let Some(ident) = stack.pop() {
+        if !visited.insert(ident.clone()) {
+            continue;
+        }
+        match var_map.get(&ident) {
+            Some(sub) => stack.extend(sub.iter().cloned()),
+            None => result.push(ident),
+        }
+    }
+    result
 }
 
 fn receiver_chain_contains(expr: &Expr, name: &str) -> bool {

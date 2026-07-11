@@ -4,7 +4,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Expr, ExprMethodCall, File, FnArg, Pat, PatType, Type};
+use syn::{Expr, ExprMethodCall, File, FnArg, PatType, Type};
 
 const CHECK_NAME: &str = "symbol-as-user-key";
 

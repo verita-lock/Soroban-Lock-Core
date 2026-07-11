@@ -18,12 +18,18 @@ impl Check for TtlNoSetCheck {
 
     fn run(&self, file: &File, _source: &str) -> Vec<Finding> {
         // Collect all keys passed to `set` across the whole file.
-        let mut set_collector = KeyCollector { method: "set", keys: Vec::new() };
+        let mut set_collector = KeyCollector {
+            method: "set",
+            keys: Vec::new(),
+        };
         set_collector.visit_file(file);
         let set_keys: Vec<String> = set_collector.keys;
 
         // Collect all (key, line, fn_name) passed to `extend_ttl` (3-arg form).
-        let mut ttl_collector = TtlExtendCollector { entries: Vec::new() };
+        let mut ttl_collector = TtlExtendCollector {
+            current_fn: String::new(),
+            entries: Vec::new(),
+        };
         for method in contractimpl_functions(file) {
             let fn_name = method.sig.ident.to_string();
             ttl_collector.current_fn = fn_name;
@@ -52,7 +58,9 @@ impl Check for TtlNoSetCheck {
 
 fn receiver_chain_contains_storage(expr: &Expr) -> bool {
     match expr {
-        Expr::MethodCall(m) => m.method == "storage" || receiver_chain_contains_storage(&m.receiver),
+        Expr::MethodCall(m) => {
+            m.method == "storage" || receiver_chain_contains_storage(&m.receiver)
+        }
         Expr::Field(f) => receiver_chain_contains_storage(&f.base),
         _ => false,
     }
@@ -63,7 +71,10 @@ fn key_repr(expr: &Expr) -> Option<String> {
     match expr {
         Expr::Reference(r) => key_repr(&r.expr),
         Expr::Path(p) => Some(p.path.segments.last()?.ident.to_string()),
-        Expr::Lit(syn::ExprLit { lit: syn::Lit::Str(s), .. }) => Some(s.value()),
+        Expr::Lit(syn::ExprLit {
+            lit: syn::Lit::Str(s),
+            ..
+        }) => Some(s.value()),
         Expr::Macro(m) => Some(m.mac.path.segments.last()?.ident.to_string()),
         _ => None,
     }
@@ -102,7 +113,8 @@ impl<'ast> Visit<'ast> for TtlExtendCollector {
             && i.args.len() == 3
         {
             if let Some(k) = key_repr(&i.args[0]) {
-                self.entries.push((k, i.span().start().line, self.current_fn.clone()));
+                self.entries
+                    .push((k, i.span().start().line, self.current_fn.clone()));
             }
         }
         visit::visit_expr_method_call(self, i);

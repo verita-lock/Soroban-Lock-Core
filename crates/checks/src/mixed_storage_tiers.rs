@@ -47,7 +47,7 @@ impl<'a> Visit<'_> for StorageTierVisitor<'a> {
                 let line = i.span().start().line;
                 self.key_tiers
                     .entry(key.clone())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push((tier, line));
             }
         }
@@ -61,7 +61,7 @@ impl<'a> Drop for StorageTierVisitor<'a> {
             let unique_tiers: std::collections::HashSet<_> =
                 tiers.iter().map(|(t, _)| t.as_str()).collect();
             if unique_tiers.len() > 1 {
-                for (tier, line) in tiers {
+                for (_tier, line) in tiers {
                     self.out.push(Finding {
                         check_name: CHECK_NAME.to_string(),
                         severity: Severity::Medium,

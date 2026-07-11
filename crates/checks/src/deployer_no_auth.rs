@@ -27,7 +27,9 @@ impl Check for DeployerNoAuthCheck {
                     check_name: CHECK_NAME.to_string(),
                     severity: Severity::High,
                     file_path: String::new(),
-                    line: scan.deploy_line.unwrap_or_else(|| method.sig.ident.span().start().line),
+                    line: scan
+                        .deploy_line
+                        .unwrap_or_else(|| method.sig.ident.span().start().line),
                     function_name: fn_name.clone(),
                     description: format!(
                         "`{}` calls `env.deployer().deploy(...)` without a preceding \

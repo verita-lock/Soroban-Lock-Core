@@ -2,9 +2,10 @@
 
 use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
+use std::collections::HashSet;
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Expr, ExprMethodCall, File};
+use syn::{Expr, ExprMethodCall, File, Stmt};
 
 const CHECK_NAME: &str = "event-full-state";
 
@@ -22,6 +23,7 @@ impl Check for EventFullStateCheck {
             let fn_name = method.sig.ident.to_string();
             let mut visitor = EventPublishVisitor {
                 fn_name: fn_name.clone(),
+                storage_vars: HashSet::new(),
                 out: &mut out,
             };
             visitor.visit_block(&method.block);
@@ -32,14 +34,28 @@ impl Check for EventFullStateCheck {
 
 struct EventPublishVisitor<'a> {
     fn_name: String,
+    storage_vars: HashSet<String>,
     out: &'a mut Vec<Finding>,
 }
 
 impl<'a> Visit<'a> for EventPublishVisitor<'a> {
-    fn visit_expr_method_call(&mut self, i: &ExprMethodCall) {
+    fn visit_stmt(&mut self, i: &'a Stmt) {
+        if let Stmt::Local(local) = i {
+            if let Some(init) = &local.init {
+                if contains_storage_get(&init.expr) {
+                    if let Some(name) = pat_ident_name(&local.pat) {
+                        self.storage_vars.insert(name);
+                    }
+                }
+            }
+        }
+        visit::visit_stmt(self, i);
+    }
+
+    fn visit_expr_method_call(&mut self, i: &'a ExprMethodCall) {
         if is_events_publish(i) {
-            if let Some(data_arg) = i.args.first() {
-                if is_storage_get_result(data_arg) {
+            if let Some(data_arg) = i.args.iter().nth(1) {
+                if expr_carries_storage_value(data_arg, &self.storage_vars) {
                     self.out.push(Finding {
                         check_name: CHECK_NAME.to_string(),
                         severity: Severity::Low,
@@ -56,6 +72,14 @@ impl<'a> Visit<'a> for EventPublishVisitor<'a> {
             }
         }
         visit::visit_expr_method_call(self, i);
+    }
+}
+
+fn pat_ident_name(pat: &syn::Pat) -> Option<String> {
+    match pat {
+        syn::Pat::Ident(pat_ident) => Some(pat_ident.ident.to_string()),
+        syn::Pat::Type(pat_type) => pat_ident_name(&pat_type.pat),
+        _ => None,
     }
 }
 
@@ -79,13 +103,15 @@ fn receiver_chain_contains_events(expr: &Expr) -> bool {
     }
 }
 
-fn is_storage_get_result(expr: &Expr) -> bool {
+/// Whether an expression, possibly wrapped in `.unwrap()`/`.unwrap_or(...)`, directly
+/// contains a storage `get()` call somewhere in its receiver chain.
+fn contains_storage_get(expr: &Expr) -> bool {
     match expr {
         Expr::MethodCall(m) => {
-            if m.method == "get" {
-                return receiver_chain_contains_storage(&m.receiver);
+            if m.method == "get" && receiver_chain_contains_storage(&m.receiver) {
+                return true;
             }
-            false
+            contains_storage_get(&m.receiver)
         }
         _ => false,
     }
@@ -101,6 +127,24 @@ fn receiver_chain_contains_storage(expr: &Expr) -> bool {
         }
         Expr::Field(f) => receiver_chain_contains_storage(&f.base),
         _ => false,
+    }
+}
+
+/// Whether an event-data expression carries a storage value: either a direct storage
+/// `get()` chain, a tracked variable assigned from one, or a tuple containing either.
+fn expr_carries_storage_value(expr: &Expr, storage_vars: &HashSet<String>) -> bool {
+    match expr {
+        Expr::Tuple(t) => t
+            .elems
+            .iter()
+            .any(|e| expr_carries_storage_value(e, storage_vars)),
+        Expr::Reference(r) => expr_carries_storage_value(&r.expr, storage_vars),
+        Expr::Path(p) => p
+            .path
+            .get_ident()
+            .map(|id| storage_vars.contains(&id.to_string()))
+            .unwrap_or(false),
+        _ => contains_storage_get(expr),
     }
 }
 

@@ -8,7 +8,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Expr, ExprForLoop, ExprLoop, ExprMethodCall, ExprWhile, File};
+use syn::{ExprForLoop, ExprLoop, ExprMethodCall, ExprWhile, File};
 
 const CHECK_NAME: &str = "loop-host-call";
 
@@ -42,20 +42,42 @@ impl<'ast> Visit<'ast> for LoopHostCallVisitor<'ast> {
             let method_name = i.method.to_string();
             let is_host_call = matches!(
                 method_name.as_str(),
-                "get" | "set" | "has" | "remove" | "extend_ttl" | "get_ledger_sequence"
-                    | "get_timestamp" | "get_network_id" | "get_network_passphrase"
-                    | "invoke_contract" | "invoke_stellar_classic_stellar_asset"
-                    | "invoke_stellar_classic_account" | "get_contract_id" | "get_contract_wasm"
-                    | "put_contract_data" | "del_contract_data" | "get_contract_data"
-                    | "compute_hash_sha256" | "verify_sig_ed25519" | "verify_sig_secp256k1"
-                    | "recover_key_ecdsa_secp256k1" | "emit_event" | "get_current_contract_address"
-                    | "get_invoking_contract" | "get_current_call_stack" | "get_current_auth"
-                    | "require_auth" | "require_auth_for_args" | "get_current_nonce"
-                    | "increment_nonce" | "get_current_ledger_sequence" | "get_current_timestamp"
-                    | "get_current_network_id" | "get_current_network_passphrase"
-                    | "get_current_contract_id" | "get_current_contract_wasm"
-                    | "put_contract_data" | "del_contract_data" | "get_contract_data"
-                    | "instance" | "temporary" | "persistent"
+                "get"
+                    | "set"
+                    | "has"
+                    | "remove"
+                    | "extend_ttl"
+                    | "get_ledger_sequence"
+                    | "get_timestamp"
+                    | "get_network_id"
+                    | "get_network_passphrase"
+                    | "invoke_contract"
+                    | "invoke_stellar_classic_stellar_asset"
+                    | "invoke_stellar_classic_account"
+                    | "get_contract_id"
+                    | "get_contract_wasm"
+                    | "put_contract_data"
+                    | "del_contract_data"
+                    | "get_contract_data"
+                    | "compute_hash_sha256"
+                    | "verify_sig_ed25519"
+                    | "verify_sig_secp256k1"
+                    | "recover_key_ecdsa_secp256k1"
+                    | "emit_event"
+                    | "get_current_contract_address"
+                    | "get_invoking_contract"
+                    | "get_current_call_stack"
+                    | "get_current_auth"
+                    | "require_auth"
+                    | "require_auth_for_args"
+                    | "get_current_nonce"
+                    | "increment_nonce"
+                    | "get_current_ledger_sequence"
+                    | "get_current_timestamp"
+                    | "get_current_network_id"
+                    | "get_current_network_passphrase"
+                    | "get_current_contract_id"
+                    | "get_current_contract_wasm"
             );
 
             if is_host_call {
@@ -181,7 +203,7 @@ impl C {
 }
 "#;
         let file = parse_file(src)?;
-        let hits = LoopHostCallCheck.run(&file, "");
+        let _hits = LoopHostCallCheck.run(&file, "");
         // Note: "publish" is not in our list, but "emit_event" is
         // This test may not flag depending on method name
         Ok(())

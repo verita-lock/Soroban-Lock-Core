@@ -8,7 +8,7 @@ use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Expr, ExprCall, ExprMethodCall, File, Stmt};
+use syn::{Expr, ExprCall, File, Stmt};
 
 const CHECK_NAME: &str = "alloc-in-loop";
 
@@ -45,7 +45,7 @@ struct AllocScan<'a> {
 impl<'ast> Visit<'ast> for AllocScan<'_> {
     fn visit_stmt(&mut self, i: &'ast Stmt) {
         match i {
-            Stmt::Expr(Expr::ForLoop(fl), _) | Stmt::Expr(Expr::While(wl), _) => {
+            Stmt::Expr(Expr::ForLoop(_), _) | Stmt::Expr(Expr::While(_), _) => {
                 self.loop_depth += 1;
                 visit::visit_stmt(self, i);
                 self.loop_depth -= 1;
@@ -82,17 +82,25 @@ impl<'ast> Visit<'ast> for AllocScan<'_> {
 
 fn is_vec_or_map_new(expr: &ExprCall) -> bool {
     if let Expr::Path(p) = &*expr.func {
-        if let Some(ident) = p.path.get_ident() {
-            return matches!(ident.to_string().as_str(), "Vec" | "Map");
+        let segs = &p.path.segments;
+        if segs.len() >= 2 {
+            let type_name = segs[segs.len() - 2].ident.to_string();
+            let fn_name = segs[segs.len() - 1].ident.to_string();
+            return matches!(type_name.as_str(), "Vec" | "Map") && fn_name == "new";
         }
     }
     false
 }
 
-fn get_alloc_type(expr: &ExprCall) -> &str {
+fn get_alloc_type(expr: &ExprCall) -> &'static str {
     if let Expr::Path(p) = &*expr.func {
-        if let Some(ident) = p.path.get_ident() {
-            return ident.to_string().leak();
+        let segs = &p.path.segments;
+        if segs.len() >= 2 {
+            return match segs[segs.len() - 2].ident.to_string().as_str() {
+                "Vec" => "Vec",
+                "Map" => "Map",
+                _ => "Collection",
+            };
         }
     }
     "Collection"

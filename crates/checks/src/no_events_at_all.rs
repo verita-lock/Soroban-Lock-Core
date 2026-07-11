@@ -26,19 +26,19 @@ impl Check for NoEventsAtAllCheck {
     fn run(&self, file: &File, _source: &str) -> Vec<Finding> {
         let mut file_scan = FileScan::default();
         let mut out = Vec::new();
-        
+
         // Scan all contractimpl functions in the file
         for method in contractimpl_functions(file) {
             let mut func_scan = FuncBodyScan::default();
             func_scan.visit_block(&method.block);
-            
+
             if func_scan.storage_write {
                 file_scan.has_storage_write = true;
             }
             if func_scan.events_publish {
                 file_scan.has_events_publish = true;
             }
-            
+
             // Track the first storage write line for reporting
             if file_scan.first_storage_write_line.is_none() && func_scan.storage_write {
                 if let Some(line) = first_storage_write_line(&method.block) {
@@ -46,7 +46,7 @@ impl Check for NoEventsAtAllCheck {
                 }
             }
         }
-        
+
         // Flag if file has storage writes but no events publish
         if file_scan.has_storage_write && !file_scan.has_events_publish {
             let line = file_scan.first_storage_write_line.unwrap_or(1);
@@ -56,15 +56,14 @@ impl Check for NoEventsAtAllCheck {
                 file_path: String::new(),
                 line,
                 function_name: String::new(),
-                description: format!(
-                    "Contract performs storage operations (set/remove) but has zero \
+                description: "Contract performs storage operations (set/remove) but has zero \
                      `env.events().publish()` calls. State changes are invisible to \
                      indexers and users, violating the transparency principle of \
                      smart contracts."
-                ),
+                    .to_string(),
             });
         }
-        
+
         out
     }
 }
@@ -320,4 +319,3 @@ impl Contract {
         Ok(())
     }
 }
-</content>

@@ -6,9 +6,10 @@
 
 use crate::util::contractimpl_functions;
 use crate::{Check, Finding, Severity};
+use std::collections::HashSet;
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
-use syn::{Expr, ExprMethodCall, File};
+use syn::{Expr, ExprMethodCall, File, Stmt};
 
 const CHECK_NAME: &str = "weak-commitment";
 
@@ -26,6 +27,7 @@ impl Check for WeakCommitmentCheck {
             let fn_name = method.sig.ident.to_string();
             let mut scan = CommitmentScan {
                 fn_name,
+                compound_vars: HashSet::new(),
                 out: &mut out,
             };
             scan.visit_block(&method.block);
@@ -36,12 +38,26 @@ impl Check for WeakCommitmentCheck {
 
 struct CommitmentScan<'a> {
     fn_name: String,
+    compound_vars: HashSet<String>,
     out: &'a mut Vec<Finding>,
 }
 
 impl<'ast> Visit<'ast> for CommitmentScan<'_> {
+    fn visit_stmt(&mut self, i: &'ast Stmt) {
+        if let Stmt::Local(local) = i {
+            if let Some(init) = &local.init {
+                if matches!(&*init.expr, Expr::Tuple(_)) {
+                    if let Some(name) = pat_ident_name(&local.pat) {
+                        self.compound_vars.insert(name);
+                    }
+                }
+            }
+        }
+        visit::visit_stmt(self, i);
+    }
+
     fn visit_expr_method_call(&mut self, i: &'ast ExprMethodCall) {
-        if is_sha256_call(i) && has_weak_argument(i) {
+        if is_sha256_call(i) && has_weak_argument(i, &self.compound_vars) {
             let line = i.span().start().line;
             self.out.push(Finding {
                 check_name: CHECK_NAME.to_string(),
@@ -74,13 +90,32 @@ fn is_sha256_call(m: &ExprMethodCall) -> bool {
     false
 }
 
-fn has_weak_argument(m: &ExprMethodCall) -> bool {
+fn pat_ident_name(pat: &syn::Pat) -> Option<String> {
+    match pat {
+        syn::Pat::Ident(pat_ident) => Some(pat_ident.ident.to_string()),
+        syn::Pat::Type(pat_type) => pat_ident_name(&pat_type.pat),
+        _ => None,
+    }
+}
+
+fn has_weak_argument(m: &ExprMethodCall, compound_vars: &HashSet<String>) -> bool {
     // Flag if argument is a simple Path or Literal (not a compound expression)
     if m.args.len() != 1 {
         return false;
     }
-    let arg = &m.args[0];
-    matches!(arg, Expr::Path(_) | Expr::Lit(_))
+    let arg = match &m.args[0] {
+        Expr::Reference(r) => &*r.expr,
+        other => other,
+    };
+    match arg {
+        Expr::Path(p) => p
+            .path
+            .get_ident()
+            .map(|id| !compound_vars.contains(&id.to_string()))
+            .unwrap_or(true),
+        Expr::Lit(_) => true,
+        _ => false,
+    }
 }
 
 #[cfg(test)]

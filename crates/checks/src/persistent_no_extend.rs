@@ -63,7 +63,10 @@ impl<'ast> Visit<'ast> for PersistentTtlVisitor {
             }
         }
 
-        if method == "extend_ttl" && receiver_chain_has_persistent(&i.receiver) && !i.args.is_empty() {
+        if method == "extend_ttl"
+            && receiver_chain_has_persistent(&i.receiver)
+            && !i.args.is_empty()
+        {
             if let Some(key) = key_repr(&i.args[0]) {
                 if !self.extend_keys.contains(&key) {
                     self.extend_keys.push(key);

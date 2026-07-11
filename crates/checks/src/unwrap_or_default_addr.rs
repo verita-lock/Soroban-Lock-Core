@@ -91,7 +91,7 @@ fn receiver_chain_has_storage(expr: &Expr) -> bool {
 
 /// Walk the receiver chain and find the innermost `.get(...)` call; return it
 /// if it sits on a storage chain.
-fn find_storage_get<'a>(expr: &'a Expr) -> Option<&'a ExprMethodCall> {
+fn find_storage_get(expr: &Expr) -> Option<&ExprMethodCall> {
     match expr {
         Expr::MethodCall(m) => {
             if m.method == "get" && receiver_chain_has_storage(&m.receiver) {

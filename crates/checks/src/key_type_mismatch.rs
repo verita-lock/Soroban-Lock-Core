@@ -160,20 +160,6 @@ struct KeyCollector<'a> {
     uses: HashMap<String, Vec<KeyUse>>,
 }
 
-fn extract_tier(expr: &Expr) -> String {
-    match expr {
-        Expr::MethodCall(m) => {
-            let method = m.method.to_string();
-            if matches!(method.as_str(), "persistent" | "instance" | "temporary") {
-                return method;
-            }
-            extract_tier(&m.receiver)
-        }
-        Expr::Field(f) => extract_tier(&f.base),
-        _ => String::new(),
-    }
-}
-
 fn receiver_chain_contains_storage(expr: &Expr) -> bool {
     match expr {
         Expr::MethodCall(m) => {
